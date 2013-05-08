@@ -29,6 +29,6 @@ if kappa > 0
     obj = -obj; % since we are supposed to be maximizing
 else
     options.Display = 'notify';
-    [y, obj] = linprog(w'*featureMap, S.A, S.b, S.Aeq, S.beq, S.lb, S.ub, S.x0, options);
+    [y, obj] = linprog(-w'*featureMap, S.A, S.b, S.Aeq, S.beq, S.lb, S.ub, S.x0, options);
 end
 

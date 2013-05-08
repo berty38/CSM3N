@@ -1,4 +1,4 @@
-function [w, kappa, y] = jointLearnEnt(featureMap, labels, scope, S, C)
+function [w, kappa, y, x] = jointLearnEnt(featureMap, labels, scope, S, C, x0)
 
 % optimizes the joint minimization objective, learning the optimal w,
 % kappa, and worst-violator y for a given featureMap, label set, MRF
@@ -10,7 +10,7 @@ z = 0;
 func = @(y) jointObjectiveEnt(y, featureMap, labels, scope, S, C, z);
 
 ell = zeros(size(labels));
-ell(scope) = 1 - labels(scope);
+ell(scope) = 2*(1 - labels(scope)) - 1;
 
 [d,m] = size(featureMap);
 
@@ -26,8 +26,11 @@ c = size(S.Aeq,1);
 
 lb = -inf(d+c+1, 1);
 lb(d+1) = 0;
-x0 = zeros(d+c+1,1);
-x0(d+1) = 1;
+
+if ~exist('x0', 'var') || isempty(x0)
+    x0 = zeros(d+c+1,1);
+    x0(d+1) = 1;
+end
 
 % x = fmincon(func, x0, [], [], [], [], lb, [], [], options);
 

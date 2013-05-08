@@ -6,6 +6,11 @@ if ~exist('ell', 'var')
     ell = zeros(size(featureMap,2),1);
 end
 
+if kappa == 0
+    [y, fval] = inference(w, featureMap, kappa, S, ell);
+    return;
+end
+
 fun = @(y) obj(y, exp((featureMap'*w + ell)/kappa - 1), kappa, S);
 
 options.Display = 'off';

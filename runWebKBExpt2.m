@@ -2,7 +2,7 @@
 
 
 clear;
-% initMosek;
+initMosek;
 initMinFunc;
 
 loadWebKB;
@@ -21,6 +21,8 @@ totalTimer = tic;
 
 for split = 1:4
     %% set up training and test splits
+    %     train = split;
+    %     test = setdiff(1:4, split);
     train = setdiff(1:4, split);
     test = split;
     
@@ -112,44 +114,52 @@ for split = 1:4
     end
     
     
+    x0 = [];
     %%
     
     for cIndex = 1:length(Cvec)
-        
-        C = Cvec(cIndex);
-        
-        fprintf('Starting run with C = %f, fold %d\n', C, split);
-        
-        scope = 1:nTr*k;
-        
-        [w, kappa, y] = jointLearnEnt(featureMap, groundTruth, scope, S, C);
-        
-        %%
-        y = dualInference(w, featureMap, kappa, S);
-        
-        trainError(cIndex, split) =  sum(predictMax(y(1:k*nTr), nTr, k) ~= predictMax(groundTruth(1:k*nTr), nTr, k)) / nTr;
-        
-        % run on test split
-        
-        y = dualInference(w, featureMapTe, kappa, Ste);
-        
-        testError(cIndex, split) =  sum(predictMax(y(1:k*nTe), nTe, k) ~= predictMax(groundTruthTe(1:k*nTe), nTe, k)) / nTe;
-        
-        %%
-        fprintf('Training error %f\n', trainError(cIndex, split));
-        fprintf('Testing error %f\n', testError(cIndex, split));
-        fprintf('kappa = %d\n', kappa);
-        fprintf('0.5 * ||w||^2 = %f\n', 0.5 * w' * w);
-        
-        savedW{split}{cIndex}= w;
-        savedKappa(split, cIndex) = kappa;
-        
-        
-        fprintf('%2.1f percent done (%d of %d). ETA %f minutes for %d runs at %f seconds per run\n', 100 * count / total, ...
-            count, total, (total - count) * (toc(totalTimer) / count) / 60, total - count, toc(totalTimer) / count);
-        count = count + 1;
-        
-        save webKBResultsJointEnt2;
+        for vanilla = 1:2
+            
+            C = Cvec(cIndex);
+            
+            fprintf('Starting run with C = %f, fold %d\n', C, split);
+            
+            scope = 1:nTr*k;
+            
+            if vanilla == 1
+                [w, violation, xi] = vanillaM3N(featureMap, groundTruth, scope, S, C);
+                kappa = 0;
+            else
+                [w, kappa, y, x0] = jointLearnEnt(featureMap, groundTruth, scope, S, C, x0);
+            end
+            %%
+            y = dualInference(w, featureMap, kappa, S);
+            
+            trainError(cIndex, split, vanilla) =  sum(predictMax(y(1:k*nTr), nTr, k) ~= predictMax(groundTruth(1:k*nTr), nTr, k)) / nTr;
+            
+            % run on test split
+            
+            y = dualInference(w, featureMapTe, kappa, Ste);
+            
+            testError(cIndex, split, vanilla) =  sum(predictMax(y(1:k*nTe), nTe, k) ~= predictMax(groundTruthTe(1:k*nTe), nTe, k)) / nTe;
+            
+            %%
+            fprintf('Training error %f\n', trainError(cIndex, split, vanilla));
+            fprintf('Testing error %f\n', testError(cIndex, split, vanilla));
+            fprintf('kappa = %d\n', kappa);
+            fprintf('0.5 * ||w||^2 = %f\n', 0.5 * w' * w);
+            
+            savedW{vanilla}{split}{cIndex}= w;
+            savedKappa{vanilla}(split, cIndex) = kappa;
+            
+            
+            fprintf('%2.1f percent done (%d of %d). ETA %f minutes for %d runs at %f seconds per run\n', 100 * count / total, ...
+                count, total, (total - count) * (toc(totalTimer) / count) / 60, total - count, toc(totalTimer) / count);
+            count = count + 1;
+            
+            %save webKBSmallResultsJoint1Ex;
+            %save webKBSmallResultsJoint3Ex;
+        end
     end
 end
 
