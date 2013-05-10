@@ -10,20 +10,27 @@ loadWebKB;
 
 %%
 
+nFolds = 4;
+nFoldsToRun = 4;
+
 tolerance = 1e-3;
 
 Cvec = 5.^linspace(-3, 1, 30);
 
-total = 4 * length(Cvec);
+total = nFoldsToRun * length(Cvec);
 
 count = 1;
 totalTimer = tic;
 
-for split = 1:4
+for split = 1:nFoldsToRun
     %% set up training and test splits
+<<<<<<< Updated upstream
     %     train = split;
     %     test = setdiff(1:4, split);
     train = setdiff(1:4, split);
+=======
+    train = setdiff(1:nFolds, split);
+>>>>>>> Stashed changes
     test = split;
     
     Xtr = [];
