@@ -21,32 +21,29 @@ id = tokens{1};
 fclose(pageFile);
 
 %%
-% 
-% clear words;
-% 
-% dictFile = fopen('WebKB/webkb_old/words.data', 'r');
-% 
-% wordIds = [];
-% words = {};
-% 
-% while ~feof(pageFile)
-%     line = fgetl(pageFile);
-%     tokens = regexp(line,'\t','split');
-% 
-%     id = str2double(tokens{4});
-%     wordIds(end+1) = id;
-%     words{end+1} = tokens{2};
-% end
-% fclose(dictFile);
-% 
-% [allWords, ~, inds] = unique(words);
-% 
-% % this is a stupid way to do this
-% word2index = zeros(max(wordIds),1);
-% for i = 1:length(words)
-%     word2index(wordIds(i)) = inds(i);
-% end
-% 
+
+clear words;
+
+dictFile = fopen('WebKB/webkb_old/words.uniq.data', 'r');
+
+tokens = textscan(dictFile, '%f\t%s\t%s\t%f');
+
+fclose(dictFile);
+
+word_ids = tokens{1};
+
+schoolDicts = {'wo_cornell', 'wo_texas', 'wo_washington', 'wo_wisconsin'};
+
+[allWords, ~, wordMap] = unique(tokens{2});
+
+[~, school_id] = ismember(tokens{3}, schoolDicts);
+
+for i = 1:length(schools)
+    inds = school_id == i;
+    
+    dicts(word_ids(inds),i) = wordMap(inds);
+end
+
 
 
 %%
@@ -58,9 +55,28 @@ tokens = textscan(wordFile, '%f\t%f\t%f\t%s\t%s', 'CollectOutput');
 I = tokens{2};
 J = tokens{3};
 
+[~, school_id] = ismember(tokens{5}, schoolDicts);
+
+fixed = false(size(J));
+
+for i = 1:length(schools)
+    inds = school_id == i;
+    J(inds) = dicts(J(inds), i);
+    fixed(inds) = true;
+end
+
 X = sparse(I,J,ones(size(I))) > 0;
 
 fclose(wordFile);
+
+%% print some random documents
+
+counts = sum(X,1);
+
+[~,inds] = sort(counts, 'descend');
+
+fprintf('most commonly used words:\n');
+allWords(inds(1:20))
 
 %%
 

@@ -42,8 +42,7 @@ for one_example = 0:1
                 sparse(size(tmp,1), size(graphTr,2)), tmp];
         end
         
-        % uncomment to remove relational information
-%         graphTr = 0*graphTr;
+        graphTr = 0*graphTr;
         
         Xte = [];
         Yte = [];
@@ -129,58 +128,39 @@ for one_example = 0:1
         x0 = [];
         %%
         
-        savedW = cell(2, 4, length(Cvec));
         
-        for cIndex = 1:length(Cvec)
-            for vanilla = 1:2
-                
-                C = Cvec(cIndex);
-                
-                fprintf('Starting run with C = %f, fold %d\n', C, split);
-                
-                scope = 1:nTr*k;
-%                 scope = 1:length(groundTruth);
-                
-                if vanilla == 1
-                    % [w, violation, xi] = vanillaM3N(featureMap, groundTruth, scope, S, C);
-                    w = vanillaM3N(featureMap, groundTruth, scope, S, C);
-                    kappa = 0;
-                else
-                    [w, kappa, y, x0] = jointLearnEnt(featureMap, groundTruth, scope, S, C, x0);
-                    %                     [w, kappa, y] = jointLearnEnt(featureMap, groundTruth, scope, S, C);
-                end
-                %%
-                y = dualInference(w, featureMap, kappa, S);
-                
-                trainError(cIndex, split, vanilla) =  sum(predictMax(y(1:k*nTr), nTr, k) ~= predictMax(groundTruth(1:k*nTr), nTr, k)) / nTr;
-                
-                % run on test split
-                
-                y = dualInference(w, featureMapTe, kappa, Ste);
-                
-                testError(cIndex, split, vanilla) =  sum(predictMax(y(1:k*nTe), nTe, k) ~= predictMax(groundTruthTe(1:k*nTe), nTe, k)) / nTe;
-                
-                %%
-                fprintf('Training error %f\n', trainError(cIndex, split, vanilla));
-                fprintf('Testing error %f\n', testError(cIndex, split, vanilla));
-                fprintf('kappa = %d\n', kappa);
-                fprintf('0.5 * ||w||^2 = %f\n', 0.5 * w' * w);
-                
-                savedW{vanilla}{split}{cIndex}= w;
-                savedKappa{vanilla}(split, cIndex) = kappa;
-                
-                
-                fprintf('%2.1f percent done (%d of %d). ETA %f minutes for %d runs at %f seconds per run\n', 100 * count / total, ...
-                    count, total, (total - count) * (toc(totalTimer) / count) / 60, total - count, toc(totalTimer) / count);
-                count = count + 1;
-                
-                if one_example
-                    save webKBFullResultsJoint1Ex;
-                else
-                    save webKBFullResultsJoint3Ex;
-                end
-            end
-        end
+        
+        attract = 10 * (eye(k) - 0.5);
+        
+        w = [randn(d*k, 1); attract(:)];
+        kappa = 1;
+        
+        
+        %%
+        y = dualInference(w, featureMap, kappa, S);
+        
+        trainError(split) =  sum(predictMax(y(1:k*nTr), nTr, k) ~= predictMax(groundTruth(1:k*nTr), nTr, k)) / nTr;
+        
+        % run on test split
+        
+        y = dualInference(w, featureMapTe, kappa, Ste);
+        
+        testError(split) =  sum(predictMax(y(1:k*nTe), nTe, k) ~= predictMax(groundTruthTe(1:k*nTe), nTe, k)) / nTe;
+        
+        %%
+        fprintf('Training error %f\n', trainError(cIndex, split, vanilla));
+        fprintf('Testing error %f\n', testError(cIndex, split, vanilla));
+        fprintf('kappa = %d\n', kappa);
+        fprintf('0.5 * ||w||^2 = %f\n', 0.5 * w' * w);
+        
+        
+        
+        fprintf('%2.1f percent done (%d of %d). ETA %f minutes for %d runs at %f seconds per run\n', 100 * count / total, ...
+            count, total, (total - count) * (toc(totalTimer) / count) / 60, total - count, toc(totalTimer) / count);
+        count = count + 1;
+        
+        
+
     end
 end
 

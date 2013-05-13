@@ -6,7 +6,8 @@
 
 % Change this path to the parent directory of wherever you keep these
 % packages.
-pathToPackages = '/Users/blondon/Code/MATLAB/';
+% pathToPackages = '/Users/blondon/Code/MATLAB/';
+pathToPackages = '~/Dropbox/Research/tools/';
 
 % install minFunc 2012
 addpath([pathToPackages 'minFunc_2012/'])
