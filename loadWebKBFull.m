@@ -1,4 +1,5 @@
 
+
 schools = {'cornell', 'texas', 'washington', 'wisconsin'};
 
 allLabels = {'course', 'faculty', 'student', 'research.project', 'other'};
@@ -11,15 +12,12 @@ J = [];
 
 pageFile = fopen('WebKB/webkb_old/pages.data', 'r');
 
-while ~feof(pageFile)
-    line = fgetl(pageFile);
-    tokens = regexp(line,'\t','split');
-    
-    id = str2double(tokens{1});
-    [~,label(id)] = ismember(tokens{2}, allLabels);
-    [~,school(id)] = ismember(tokens{3}, schools);
-    
-end
+tokens = textscan(pageFile, '%f\t%s\t%s\t', 'CollectOutput');
+
+id = tokens{1};
+[~, label(id)] = ismember(tokens{2}, allLabels);
+[~, school(id)] = ismember(tokens{3}, schools);
+
 fclose(pageFile);
 
 %%
@@ -60,7 +58,7 @@ tokens = textscan(wordFile, '%f\t%f\t%f\t%s\t%s', 'CollectOutput');
 I = tokens{2};
 J = tokens{3};
 
-X = sparse(I,J,ones(size(I)));
+X = sparse(I,J,ones(size(I))) > 0;
 
 fclose(wordFile);
 
@@ -72,7 +70,12 @@ fclose(linkFile);
 
 I = tokens{2};
 J = tokens{3};
+[~, Sc] = ismember(tokens{4}, schools);
 A = sparse(I,J,ones(size(I)));
+
+%% 
+
+counter = sparse(label(I), label(J), ones(size(I)));
 
 
 %% split up schools

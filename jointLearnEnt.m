@@ -7,7 +7,7 @@ function [w, kappa, y, x] = jointLearnEnt(featureMap, labels, scope, S, C, x0)
 % hard code z (for now, 0)
 z = 0;
 
-func = @(y) jointObjectiveEnt(y, featureMap, labels, scope, S, C, z);
+func = @(y) jointObjectiveEnt(y, featureMap, labels, scope, S, C, z, featureMap*labels);
 
 ell = zeros(size(labels));
 ell(scope) = 2*(1 - labels(scope)) - 1;
@@ -15,12 +15,24 @@ ell(scope) = 2*(1 - labels(scope)) - 1;
 [d,m] = size(featureMap);
 
 clear options;
-options.verbose = 0;
+% for minConf
+options.verbose = 2;
 options.GradObj = 'on';
 options.MaxFunEvals = inf;
-options.maxIter = 1e9;
+options.maxIter = 8000;
 options.method = 'lbfgs';
-options.correction = 250;
+options.corrections = 200;
+options.interp = 0;
+
+% for minFunc
+options.Corr = 200;
+options.LS_type = 0;
+options.LS_interp = 0;
+options.Display = 'final';
+options.outputFcn = @inferenceStat;
+options.Method = 'lbfgs';
+% options.progTol = 1e-6;
+% options.optTol = 1e-3;
 
 c = size(S.Aeq,1);
 
@@ -29,12 +41,11 @@ lb(d+1) = 0;
 
 if ~exist('x0', 'var') || isempty(x0)
     x0 = zeros(d+c+1,1);
-    x0(d+1) = 1;
+    x0(d+1) = 10;
 end
 
-% x = fmincon(func, x0, [], [], [], [], lb, [], [], options);
-
-x = minConf_TMP(func,x0,lb,inf(size(lb)),options);
+% x = minConf_TMP(func,x0,lb,inf(size(lb)),options);
+x = minFunc(func, x0, options);
 
 w = x(1:d);
 kappa = x(d+1);

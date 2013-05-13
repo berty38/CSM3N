@@ -13,13 +13,16 @@ end
 
 fun = @(y) obj(y, exp((featureMap'*w + ell)/kappa - 1), kappa, S);
 
-options.Display = 'off';
-options.outputFcn = @inferenceStat;
+options.Display = 'final';
+% options.outputFcn = @inferenceStat;
 options.Method = 'lbfgs';
 options.GradObj = 'on';
-options.MaxFunEvals = 1e12;
-options.MaxIter = 1e12;
+options.MaxFunEvals = 8000;
+options.MaxIter = 8000;
+options.LS_type = 0;
 options.LS_interp = 0;
+% options.progTol = 1e-6;
+% options.optTol = 1e-3;
 
 lambda = zeros(size(S.Aeq,1),1);
 
