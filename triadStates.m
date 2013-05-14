@@ -1,7 +1,8 @@
-function s = possibleTriadStates(v1, v2, v3)
+function s = triadStates(v1, v2, v3)
 
 % Returns array of possible states that a partially observed triad 
-% (v1,v2,v3) can be in, where v1,v2,v3 in {-1,0,+1}
+% (v1,v2,v3) can be in, given observations v1,v2,v3 in {-1,0,+1}.
+% The value 0 corresponds to being unobserved.
 
 if v1 == 0
 	s1 = [0;1];

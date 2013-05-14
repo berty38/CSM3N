@@ -15,17 +15,17 @@ obs = trui(obs);
 % Observed edges
 [I,J,V] = find(obs);
 obsEdges = [I J V];
-
 % Unobserved edges
 [I J] = find(graph-obs);
 unoEdges = [I J];
-
-% All edges
+% All edges (ordered by observed, unobserved)
 edges = [obsEdges(:,1:2) ; unoEdges];
 
-% Triads
+% All triads
 triads = findTriangles(graph);
+% Observed Triads
 obsTriads = findTriangle(obs);
+% Partially-observed triads
 unoTriads = setdiff(triads, obsTriads, 'rows');
 
 % Dimensions.
@@ -37,23 +37,8 @@ n_t = size(triads,1);	% number triads
 n_ot = size(obsTriads,1);
 n_ut = size(unoTriads,1);
 
-% Create index of edges
-% edgeIdx = sparse(edges(:,1), edges(:,2), 1:n_e, n, n);
 
-% Create linear index of triad predictions
-triadIdx = zeros(n_ut,2); % each line is [BEGINNING, END] of indices
-prevEnd = 0;
-for ut=1:n_ut
-	i = unoTriads(ot,1);
-	j = unoTriads(ot,2);
-	k = unoTriads(ot,3);
-	s = possibleTriadStates(obs(i,j), obs(i,k), obs(j,k));
-	triadIdx(ut,:) = [prevEnd+1, prevEnd+length(s)];
-	prevEnd = prevEnd + length(s);
-end
-
-
-%% Observed features
+%% Precompute observed features
 
 % Sum obs local features
 f_loc_o = zeros(2,1);
@@ -80,23 +65,58 @@ end
 f_o = [f_loc_o ; f_tri_o];
 
 
+%% Generate indices used for un-/partially-observed edges/triads
+
+% Generate index of edge predictions
+edgeIdx = sparse(unoEdges(:,1), unoEdges(:,2), 1:n_ue, n, n);
+
+% Generate linear index of triad predictions
+triadIdx = zeros(n_ut,2); % each line is [BEGINNING, END] of indices
+prevEnd = 2*n_ue;
+for ut=1:n_ut
+	i = unoTriads(ut,1);
+	j = unoTriads(ut,2);
+	k = unoTriads(ut,3);
+	states = triadStates(obs(i,j), obs(i,k), obs(j,k));
+	triadIdx(ut,:) = [prevEnd+1, prevEnd+length(states)];
+	prevEnd = prevEnd + length(states);
+end
+
+
 %% Generate feature map
 
-% Local feature map is just identity.
-F_loc = sparse(eye(n_ue));
-
-% Triad feature map
 FI = [];
 FJ = [];
 FV = [];
 nextF = 1;
+
+% Local feature map is just identity.
+FI(1:2*n_ue) = 1:2*n_ue;
+FJ(1:2*n_ue) = 1:2*n_ue;
+FV(1:2*n_ue) = 1;
+nextF = nextF + 2*n_ue;
+
+% Triad feature map
 for ut=1:n_ut
-	i = unoTriads(ot,1);
-	j = unoTriads(ot,2);
-	k = unoTriads(ot,3);
-	s = possibleTriadStates(obs(i,j), obs(i,k), obs(j,k));
-	% TODO
+	i = unoTriads(ut,1);
+	j = unoTriads(ut,2);
+	k = unoTriads(ut,3);
+	states = triadStates(obs(i,j), obs(i,k), obs(j,k));
+	sIdx = triadIdx(ut,1);
+	nextState = 0;
+	for s=1:8
+		if ismember(s, states)
+			FI(nextF) = 2*n_ue + 8*(ut-1) + s;
+			FJ(nextF) = sIdx + nextState;
+			FV(nextF) = 1;
+			nextF = nextF + 1;
+			nextState = nextState + 1;
+		end
+	end
 end
+
+% Create F
+F = sparse(FI, FJ, FV, 2*n_ue + 8*n_ut, triadIdx(end));
 
 
 %% Marginal constraints
@@ -118,40 +138,60 @@ for ue=1:n_ue
 	nextb = nextb + 1;
 end
 
-% TODO: Edit for triad sparseness
-
-% Partially obs triad marginals must sum to 1
+% Triad marginals must sum to 1
 for ut=1:n_ut
-	AI(nextA:nextA+7) = nextb;
-	AJ(nextA:nextA+7) = triadIndex(ut,0,0,0,n_ue);
-	AV(nextA:nextA+7) = 1;
+	i = unoTriads(ut,1);
+	j = unoTriads(ut,2);
+	k = unoTriads(ut,3);
+	states = triadStates(obs(i,j), obs(i,k), obs(j,k));
+	sIdx = triadIdx(ut,1);
+	eIdx = triadIdx(ut,2);
+	AI(nextA:nextA+length(states)-1) = nextb;
+	AJ(nextA:nextA+length(states)-1) = sIdx:eIdx;
+	AV(nextA:nextA+length(states)-1) = 1;
+	nextA = nextA + length(states);
 	beq(nextb) = 1;
-	nextA = nextA + 8;
 	nextb = nextb + 1;
 end
 
 % Edge/triad agreement
 for ut=1:n_ut
-	% v1 = -1
-	AI(nextA:nextA+3) = nextb;
-	AJ(nextA:nextA+3) = triadIndex(ut,-1,0,0,n_ue);
-	AV(nextA:nextA+3) = 1;
-	AI(nextA+4) = nextb;
-	AJ(nextA+4) = unoTriads(ut,1);
-	AV(nextA+4) = -1;
-	beq(nextb) = 0;
-	nextA = nextA + 5;
-	nextb = nextb + 1;
-	% v1 = +1
-	AI(nextA:nextA+3) = nextb;
-	AJ(nextA:nextA+3) = triadIndex(ut,1,0,0,n_ue);
-	AV(nextA:nextA+3) = 1;
-	AI(nextA+4) = nextb;
-	AJ(nextA+4) = unoTriads(ut,1);
-	AV(nextA+4) = -1;
-	beq(nextb) = 0;
-	nextA = nextA + 5;
-	nextb = nextb + 1;
+	i = unoTriads(ut,1);
+	j = unoTriads(ut,2);
+	k = unoTriads(ut,3);
+
+	% v1
+	if obs(i,j) == 0
+		% v1 = -1
+		states = triadStates(-1, obs(i,k), obs(j,k));
+		AI(nextA:nextA+length(states)-1) = nextb;
+		AJ(nextA:nextA+length(states)-1) = states;
+		AV(nextA:nextA+length(states)-1) = 1;
+		AI(nextA+length(states)) = nextb;
+		AJ(nextA+length(states)) = 2*edgeIdx(i,j)-1;
+		AV(nextA+length(states)) = -1;
+		beq(nextb) = 0;
+		nextA = nextA + length(states) + 1;
+		nextb = nextb + 1;
+		% v1 = +1
+
+	end
+	
+	% v2
+	if obs(i,k) == 0
+		% v2 = -1
+		
+		% v2 = +1
+		
+	end
+	
+	% v3
+	if obs(j,k) == 0
+		% v3 = -1
+		
+		% v3 = +1
+		
+	end
 end
 
 
