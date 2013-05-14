@@ -1,113 +1,140 @@
-function [Aeq, beq, F] = triadMarginals(graph, obs)
+function [Aeq, beq, f_o, F] = triadMarginals(graph, obs)
 
 % Generates the constraints associated with having
 %   edges as local features and triads as relational features
 % graph - (upper-triangular) adjacency matrix
 % obs - observed edge values, in {-1,+1}
 % Aeq, beq - pseudomarginal constraints
-% F feature map
+% f_o - features for observed variables
+% F - feature map for unobserved variables
 
-% Get edges, triads and dimensions.
-n = size(graph,1);
-% graph = triu(graph);
-[I,J] = find(graph);
-edges = [I J];
-triads = findTriangles(graph);
-n_e = size(edges,1);
-n_t = size(triads,1);
+% Just in case, convert graph to upper-triangle
+graph = triu(graph);
+obs = trui(obs);
 
-% Generate local feature map
+% Observed edges
 [I,J,V] = find(obs);
+obsEdges = [I J V];
+
+% Unobserved edges
+[I J] = find(graph-obs);
+unoEdges = [I J];
+
+% All edges
+edges = [obsEdges(:,1:2) ; unoEdges];
+
+% Triads
+triads = findTriangles(graph);
+obsTriads = findTriangle(obs);
+unoTriads = setdiff(triads, obsTriads, 'rows');
+
+% Dimensions.
+n = size(graph,1);		% number nodes
+n_e = size(edges,1);	% number edges
+n_oe = size(obsEdges,1);
+n_ue = size(unoEdges,1);
+n_t = size(triads,1);	% number triads
+n_ot = size(obsTriads,1);
+n_ut = size(unoTriads,1);
+
+% Create index of edges
+edgeIdx = sparse(edges(:,1), edges(:,2), 1:n_e, n, n);
 
 
-beq = zeros(n + nnz(graph) + 2 * nnz(graph) * k, 1);
-next = 1;
+%% Observed features
 
-assert(all(size(graph) == [n n]));
-
-[I,J,V] = find(X);
-
-LI = zeros(nnz(X) * k, 1);
-LJ = zeros(nnz(X) * k, 1);
-LV = zeros(nnz(X) * k, 1);
-
-for val = 1:k
-    startJ = localIndex(1, val, n) - 1;
-    startI = (val - 1) * d ;
-  
-    LI((val-1)*nnz(X) + 1:val*nnz(X)) = I + startI;
-    LJ((val-1)*nnz(X) + 1:val*nnz(X)) = J + startJ;
-    LV((val-1)*nnz(X) + 1:val*nnz(X)) = V;
-end
-localF = sparse(LI, LJ, LV, d * k, n * k);
-
-
-AI = [];
-AJ = [];
-AV = [];
-
-% set up local marginal constraints
-
-for i = 1:n
-    inds = localIndex(i, 1:k, n);
-    AI(end+1:end+k) = next;
-    AJ(end+1:end+k) = inds;
-    AV(end+1:end+k) = 1;
-    %   Aeq(next, inds) = 1;
-    beq(next) = 1;
-    
-    next = next + 1;
+% Sum obs local features
+f_loc_o = zeros(2,1);
+for oe=1:n_oe
+	v = obsEdges(oe,3);
+	s = v/2 + 3/2;
+	f_loc_o(s) = f_loc_o(s) + 1;
 end
 
-
-edgeF = zeros(k^2, nnz(graph) * k^2);
-
-% set up pseudomarginal constraints and overcomplete features
-[I,J] = find(graph);
-for i = 1:nnz(graph)
-    inds = pairwiseIndex(i, 1:k, 1:k, n, k);
-    
-    edgeF(:,inds - n * k) = eye(k^2);
-    
-    % make marginal sum to 1
-    
-    AI(end+1:end+k^2) = next;
-    AJ(end+1:end+k^2) = inds;
-    AV(end+1:end+k^2) = 1;
-    beq(next) = 1;
-    next = next + 1;
-    
-    for val = 1:k
-        % marginalize over a
-        inds = pairwiseIndex(i, 1:k, val, n, k);        
-        AI(end+1:end+k) = next;
-        AJ(end+1:end+k) = inds;
-        AV(end+1:end+k) = 1;
-
-        AI(end+1) = next;
-        AJ(end+1) = localIndex(J(i), val, n);
-        AV(end+1) = -1;
-        beq(next) = 0;
-        
-        next = next + 1;
-        
-        % marginalize over b
-        inds = pairwiseIndex(i, val, 1:k, n, k);
-        AI(end+1:end+k) = next;
-        AJ(end+1:end+k) = inds;
-        AV(end+1:end+k) = 1;
-
-        AI(end+1) = next;
-        AJ(end+1) = localIndex(I(i), val, n);
-        AV(end+1) = -1;
-        beq(next) = 0;
-        
-        next = next + 1;
-    end
-    
+% Sum obs triad features
+f_tri_o = zeros(8,1);
+for ot=1:n_ot
+	i = obsTriads(ot,1);
+	j = obsTriads(ot,2);
+	k = obsTriads(ot,3);
+	v1 = (obs(i,j) + 1) / 2;
+	v2 = (obs(i,k) + 1) / 2;
+	v3 = obs(j,k);
+	s = v1*4 + v2*2 + v1 + 1;
+	f_tri_o(s) = f_tri_o(s) + 1;
 end
 
-Aeq = sparse(AI, AJ, AV, n + nnz(graph) + 2 * nnz(graph) * k, n * k + nnz(graph) * k^2);
+% Al observed features
+f_o = [f_loc_o ; f_tri_o];
 
-F = [localF sparse(k * d, nnz(graph) * k^2); sparse(k^2, n*k) edgeF];
+
+%% Generate feature map
+F_loc = sparse(eye(n_ue));
+F_tri = zeros(2 * n_e);
+for ut=1:n_ut
+	i = unoTriads(ot,1);
+	j = unoTriads(ot,2);
+	k = unoTriads(ot,3);
+	s = possibleTriadStates(obs(i,j), obs(i,k), obs(j,k));
+	% TODO
+end
+
+
+%% Marginal constraints
+
+AI = zeros(2*n_ue + 8*n_ut, 1);
+AJ = zeros(2*n_ue + 8*n_ut, 1);
+AV = zeros(2*n_ue + 8*n_ut, 1);
+beq = zeros(n_ue + n_ut, 1);
+
+nextA = 1;
+nextb = 1;
+
+% Local marginals must sum to 1
+for ue=1:n_ue
+	AI(nextA:nextA+1) = nextb;
+	AJ(nextA:nextA+1) = nextA:nextA+1;
+	AV(nextA:nextA+1) = 1;
+	beq(nextb) = 1;
+	nextA = nextA + 2;
+	nextb = nextb + 1;
+end
+
+% Partially obs triad marginals must sum to 1
+for ut=1:n_ut
+	AI(nextA:nextA+7) = nextb;
+	AJ(nextA:nextA+7) = triadIndex(ut,0,0,0,n_ue);
+	AV(nextA:nextA+7) = 1;
+	beq(nextb) = 1;
+	nextA = nextA + 8;
+	nextb = nextb + 1;
+end
+
+% Edge/triad agreement
+for ut=1:n_ut
+	% v1 = -1
+	AI(nextA:nextA+3) = nextb;
+	AJ(nextA:nextA+3) = triadIndex(ut,-1,0,0,n_ue);
+	AV(nextA:nextA+3) = 1;
+	AI(nextA+4) = nextb;
+	AJ(nextA+4) = unoTriads(ut,1);
+	AV(nextA+4) = -1;
+	beq(nextb) = 0;
+	nextA = nextA + 5;
+	nextb = nextb + 1;
+	% v1 = +1
+	AI(nextA:nextA+3) = nextb;
+	AJ(nextA:nextA+3) = triadIndex(ut,1,0,0,n_ue);
+	AV(nextA:nextA+3) = 1;
+	AI(nextA+4) = nextb;
+	AJ(nextA+4) = unoTriads(ut,1);
+	AV(nextA+4) = -1;
+	beq(nextb) = 0;
+	nextA = nextA + 5;
+	nextb = nextb + 1;
+	
+end
+
+
+
 
