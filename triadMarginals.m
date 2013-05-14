@@ -118,6 +118,8 @@ for ue=1:n_ue
 	nextb = nextb + 1;
 end
 
+% TODO: Edit for triad sparseness
+
 % Partially obs triad marginals must sum to 1
 for ut=1:n_ut
 	AI(nextA:nextA+7) = nextb;
@@ -150,7 +152,6 @@ for ut=1:n_ut
 	beq(nextb) = 0;
 	nextA = nextA + 5;
 	nextb = nextb + 1;
-	% TODO: Edit for triad sparseness
 end
 
 
