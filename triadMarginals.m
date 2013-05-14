@@ -38,7 +38,19 @@ n_ot = size(obsTriads,1);
 n_ut = size(unoTriads,1);
 
 % Create index of edges
-edgeIdx = sparse(edges(:,1), edges(:,2), 1:n_e, n, n);
+% edgeIdx = sparse(edges(:,1), edges(:,2), 1:n_e, n, n);
+
+% Create linear index of triad predictions
+triadIdx = zeros(n_ut,2); % each line is [BEGINNING, END] of indices
+prevEnd = 0;
+for ut=1:n_ut
+	i = unoTriads(ot,1);
+	j = unoTriads(ot,2);
+	k = unoTriads(ot,3);
+	s = possibleTriadStates(obs(i,j), obs(i,k), obs(j,k));
+	triadIdx(ut,:) = [prevEnd+1, prevEnd+length(s)];
+	prevEnd = prevEnd + length(s);
+end
 
 
 %% Observed features
@@ -64,13 +76,20 @@ for ot=1:n_ot
 	f_tri_o(s) = f_tri_o(s) + 1;
 end
 
-% Al observed features
+% All observed features
 f_o = [f_loc_o ; f_tri_o];
 
 
 %% Generate feature map
+
+% Local feature map is just identity.
 F_loc = sparse(eye(n_ue));
-F_tri = zeros(2 * n_e);
+
+% Triad feature map
+FI = [];
+FJ = [];
+FV = [];
+nextF = 1;
 for ut=1:n_ut
 	i = unoTriads(ot,1);
 	j = unoTriads(ot,2);
@@ -82,11 +101,10 @@ end
 
 %% Marginal constraints
 
-AI = zeros(2*n_ue + 8*n_ut, 1);
-AJ = zeros(2*n_ue + 8*n_ut, 1);
-AV = zeros(2*n_ue + 8*n_ut, 1);
-beq = zeros(n_ue + n_ut, 1);
-
+AI = [];
+AJ = [];
+AV = [];
+beq = [];
 nextA = 1;
 nextb = 1;
 
@@ -132,7 +150,7 @@ for ut=1:n_ut
 	beq(nextb) = 0;
 	nextA = nextA + 5;
 	nextb = nextb + 1;
-	
+	% TODO: Edit for triad sparseness
 end
 
 
