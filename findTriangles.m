@@ -7,7 +7,7 @@ function triads = findTriangles(graph)
 % convert graph to upper-triangular (if not already so)
 graph = triu(graph);
 [I,J] = find(graph);
-IJ = sortrows([I J])
+IJ = sortrows([I J]);
 T = size(IJ,1);
 triads = [];
 
