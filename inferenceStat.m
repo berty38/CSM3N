@@ -55,10 +55,10 @@ if mod(i-1, interval) == 0
     plot(diff);
     title('Difference between numerical versus user-supplied derivative');
     
-    if diff(end) > 1e10
-        keyboard;
-    end
-    
+%     if diff(end) > 1e10
+%         keyboard;
+%     end
+%     
     drawnow;
 end
 stop = false;

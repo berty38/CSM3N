@@ -3,8 +3,8 @@ initMinFunc;
 
 clear;
 
-n = 100;
-pObs = .1;
+n = 500;
+pObs = .4;
 pSame = .9;
 
 k = 3;
@@ -44,7 +44,7 @@ end
 scope = 1:n*k;
 
 
-Cvec = 10.^linspace(-4,4,20);
+Cvec = 10.^linspace(-4,4,10);
 
 for cIndex = 1:length(Cvec)
     for vanilla = 1:2
