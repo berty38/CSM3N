@@ -6,16 +6,18 @@
 
 % Change this path to the parent directory of wherever you keep these
 % packages.
-% pathToPackages = '/Users/blondon/Code/MATLAB/';
-pathToPackages = '~/Dropbox/Research/tools/';
+global minFunc_path
+if isempty(minFunc_path)
+	minFunc_path = '~/Dropbox/Research/tools/';
+end
 
 % install minFunc 2012
-addpath([pathToPackages 'minFunc_2012/'])
-addpath([pathToPackages 'minFunc_2012/minFunc/'])
-addpath([pathToPackages 'minFunc_2012/minFunc/compiled/'])
-addpath([pathToPackages 'minFunc_2012/autoDif/'])
+addpath([minFunc_path 'minFunc_2012/'])
+addpath([minFunc_path 'minFunc_2012/minFunc/'])
+addpath([minFunc_path 'minFunc_2012/minFunc/compiled/'])
+addpath([minFunc_path 'minFunc_2012/autoDif/'])
 
 % install minConf
-addpath([pathToPackages 'minConf/'])
-addpath([pathToPackages 'minConf/minConf'])
-addpath([pathToPackages 'minConf/minFunc'])
+addpath([minFunc_path 'minConf/'])
+addpath([minFunc_path 'minConf/minConf'])
+addpath([minFunc_path 'minConf/minFunc'])
