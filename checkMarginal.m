@@ -10,7 +10,7 @@ local = 0;
 pairwise = 0;
 marginal = 0;
 
-tol = 1e-5;
+tol = 1e-3;
 
 for i = 1:n
     inds = localIndex(i, 1:k, n);
@@ -46,4 +46,4 @@ end
 
 fprintf('%d local marginals are not on the simplex\n', local);
 fprintf('%d pairwise marginals are not on the simplex\n', pairwise);
-fprintf('%d marginals are not consist\n', marginal);
+fprintf('%d marginals are not consistent\n', marginal);

@@ -45,7 +45,6 @@ for i = 1:length(schools)
 end
 
 
-
 %%
 
 wordFile = fopen('WebKB/webkb_old/wa.data', 'r');
@@ -57,12 +56,10 @@ J = tokens{3};
 
 [~, school_id] = ismember(tokens{5}, schoolDicts);
 
-fixed = false(size(J));
-
 for i = 1:length(schools)
     inds = school_id == i;
     J(inds) = dicts(J(inds), i);
-    fixed(inds) = true;
+    Xwo{i} = sparse(I(inds), J(inds), true(nnz(inds),1));
 end
 
 X = sparse(I,J,ones(size(I))) > 0;
@@ -77,6 +74,16 @@ counts = sum(X,1);
 
 fprintf('most commonly used words:\n');
 allWords(inds(1:20))
+% 
+% for i = 1:4
+%     
+%     counts = sum(Xwo{i},1);
+%     
+%     [~,inds] = sort(counts, 'descend');
+%     
+%     fprintf('most commonly used words:\n');
+%     allWords(wordMap(inds(1:20)))
+% end
 
 %%
 
@@ -96,7 +103,7 @@ counter = sparse(label(I), label(J), ones(size(I)));
 
 %% split up schools
 
-clear Y cites words;
+clear Y cites words wordsWo;
 
 for i = 1:length(schools)
     inds = school == i;
@@ -105,6 +112,9 @@ for i = 1:length(schools)
     
     cites{i} = A(inds,inds);
     words{i} = X(inds,:);
+    for j = 1:length(schools)
+        wordsWo{j}{i} = Xwo{j}(inds,:);
+    end
 end
 
 

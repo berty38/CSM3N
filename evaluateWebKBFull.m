@@ -1,8 +1,8 @@
 clear;
-file1 = 'webKBFullResultsJoint3Ex';
-file3 = 'webKBFullNoLinksResultsJoint3Ex';
-% file1 = 'webKBFullResultsJoint1Ex';
-% file3 = 'webKBFullResultsJoint3Ex';
+%  file1 = 'webKBFullNoLinksResultsJoint3Ex';
+%  file3 = 'webKBFullNoLinksResultsJoint3Ex';
+ file1 = 'webKBFullResultsJoint1Ex';
+ file3 = 'webKBFullResultsJoint3Ex';
 % file1 = 'webKBSynthResultsJoint1Ex';
 % file3 = 'webKBSynthResultsJoint3Ex';
 % file1 = 'webKBSmallResultsJoint1Ex';

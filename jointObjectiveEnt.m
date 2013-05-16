@@ -1,4 +1,4 @@
-function [f, g] = jointObjectiveEnt(x, F, labels, scope, S, C, z, F_labels)
+function [f, g] = jointObjectiveEnt(x, F, labels, scope, S, C, F_labels, varargin)
 
 % outputs the objective value and gradient of the joint learning objective
 % using the dual of loss-augmented inference to make the objective a
@@ -16,25 +16,32 @@ w = x(1:d);
 kappa = max(0, x(d+1)); % don't let kappa be negative
 lambda = x(d+2:end);
 
+%isolate w
+% kappa = 1;
+
 A = S.Aeq;
 b = S.beq;
 
 ell = zeros(size(labels));
-ell(scope) = 1-labels(scope);
-delta = sum(ell(scope));
+ell(scope) = 1-2*labels(scope);
+% delta = sum(labels(scope));
 
-y = exp((F'*w + ell + A'*lambda)/kappa - 1);
+logy = (F'*w + ell + A'*lambda)/kappa - 1;
+y = exp(logy);
 
-loss = kappa * sum(y) - b'*lambda + delta - w'*(F_labels);
+loss = C * (kappa * sum(y) - w'*F_labels - b'*lambda);
 
-f = 0.5*(w'*w)/sqrt(kappa + z) + C * loss;
+f = 0.5*(w'*w) / (kappa^2) + loss;
+
+maxG = 1e16;
 
 if nargout == 2
-    gradW = w/sqrt(kappa + z);
-    gradW = gradW + C * ((F * y) - F_labels);
-    gradKappa = - C*y(y>0)'*log(y(y>0)) - w'*w / (4*(kappa + z)^(3/2));
-    gradLambda = C* (A * y - b);
-    
+    gradW = w / (kappa^2) + C*(F * y) - C*F_labels; 
+    gradKappa =  - w'*w / (kappa^3) -  C*y(y>0)'*logy(y>0);
+    gradLambda = C * (A * y - b);
+
     g = [gradW; gradKappa; gradLambda];
     
+%    g(g>maxG) = maxG;
+%    g(g<-maxG) = -maxG;    
 end

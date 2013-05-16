@@ -9,14 +9,20 @@ loadWebKBFull;
 
 %%
 
-Cvec = 10.^linspace(-3, 0, 10);
+Cvec = 10.^linspace(-2, 1, 10);
+
+savedW = cell(length(Cvec), 4, 2);
+savedKappa = zeros(length(Cvec), 4, 2);
+trainError = zeros(length(Cvec), 4, 2);
+testError = zeros(length(Cvec), 4, 2);
+
 
 total = 4 * length(Cvec) * 2 * 2;
 
 count = 1;
 totalTimer = tic;
 
-for one_example = 0:1
+for one_example = 0:0
     
     clear trainError testError savedW savedKappa;
     
@@ -35,7 +41,11 @@ for one_example = 0:1
         graphTr = [];
         
         for i = 1:length(train)
-            Xtr = [Xtr words{train(i)}'];
+            if one_example
+                Xtr = [Xtr words{train(i)}'];
+            else
+                Xtr = [Xtr wordsWo{split}{train(i)}'];
+            end
             Ytr = [Ytr; Y{train(i)}(:)];
             tmp = cites{train(i)};
             graphTr = [graphTr, sparse(size(graphTr,1), size(tmp,2));...
@@ -43,14 +53,18 @@ for one_example = 0:1
         end
         
         % uncomment to remove relational information
-%         graphTr = 0*graphTr;
+        %  graphTr = 0*graphTr;
         
         Xte = [];
         Yte = [];
         graphTe = [];
         
         for i = 1:length(test)
-            Xte = [Xte words{test(i)}'];
+            if one_example
+                Xte = [Xte words{test(i)}'];
+            else
+                Xte = [Xte wordsWo{split}{test(i)}'];
+            end
             Yte = [Yte; Y{test(i)}(:)];
             tmp = cites{test(i)};
             graphTe = [graphTe, sparse(size(graphTe,1), size(tmp,2));...
@@ -61,6 +75,21 @@ for one_example = 0:1
         nTr = size(Xtr, 2);
         nTe = size(Xte, 2);
         d = size(Xtr, 1);
+        
+        %% compare link label probabilities
+        
+        [I,J] = find(graphTr);
+        counterTr = sparse(Ytr(I), Ytr(J), ones(size(I)));
+        [I,J] = find(graphTe);
+        counterTe = sparse(Yte(I), Yte(J), ones(size(I)));
+
+        subplot(211);
+        imagesc(counterTr)
+        title('Training');
+        subplot(212);
+        imagesc(counterTe)
+        title('Testing');
+        
         
         %% set up local marginal constraints
         
@@ -129,25 +158,23 @@ for one_example = 0:1
         x0 = [];
         %%
         
-        savedW = cell(2, 4, length(Cvec));
-        
         for cIndex = 1:length(Cvec)
-            for vanilla = 1:2
+            for vanilla = 2:2
                 
                 C = Cvec(cIndex);
                 
                 fprintf('Starting run with C = %f, fold %d\n', C, split);
                 
                 scope = 1:nTr*k;
-%                 scope = 1:length(groundTruth);
+%                                 scope = 1:length(groundTruth);
                 
                 if vanilla == 1
                     % [w, violation, xi] = vanillaM3N(featureMap, groundTruth, scope, S, C);
                     w = vanillaM3N(featureMap, groundTruth, scope, S, C);
                     kappa = 0;
                 else
-                    [w, kappa, y, x0] = jointLearnEnt(featureMap, groundTruth, scope, S, C, x0);
-                    %                     [w, kappa, y] = jointLearnEnt(featureMap, groundTruth, scope, S, C);
+                    %                     [w, kappa, y, x0] = jointLearnEnt(featureMap, groundTruth, scope, S, C, x0);
+                    [w, kappa, y] = jointLearnEnt(featureMap, groundTruth, scope, S, C);
                 end
                 %%
                 y = dualInference(w, featureMap, kappa, S);
@@ -166,20 +193,23 @@ for one_example = 0:1
                 fprintf('kappa = %d\n', kappa);
                 fprintf('0.5 * ||w||^2 = %f\n', 0.5 * w' * w);
                 
-                savedW{vanilla}{split}{cIndex}= w;
-                savedKappa{vanilla}(split, cIndex) = kappa;
+                savedW{cIndex, split, vanilla}= w;
+                savedKappa(cIndex, split, vanilla) = kappa;
                 
                 
                 fprintf('%2.1f percent done (%d of %d). ETA %f minutes for %d runs at %f seconds per run\n', 100 * count / total, ...
                     count, total, (total - count) * (toc(totalTimer) / count) / 60, total - count, toc(totalTimer) / count);
                 count = count + 1;
                 
-                if one_example
-                    save webKBFullResultsJoint1Ex;
-                else
-                    save webKBFullResultsJoint3Ex;
-                end
             end
+            if one_example
+                %                     save webKBFullNoLinksResultsJoint1Ex;
+                %                 save webKBFullResultsJoint1Ex;
+            else
+                %                     save webKBFullNoLinksResultsJoint3Ex;
+                %                 save webKBFullResultsJoint3Ex;
+            end
+            
         end
     end
 end

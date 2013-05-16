@@ -5,11 +5,13 @@ function stop = inferenceStat(x,iterationType,i,funEvals,f,t,gtd,g,d,optCond,var
 persistent obj;
 persistent prevX;
 persistent changeX;
+persistent diff;
 
 if i == 0
     obj = [];
     prevX = 0;
     changeX = [];
+    diff = [];
 end
 
 obj(end+1) = f;
@@ -20,7 +22,7 @@ interval = 100;
 window = 500;
 
 if mod(i-1, interval) == 0
-    subplot(311);
+    subplot(411);
     if any(obj <= 0)
         plot(obj);
     else
@@ -29,7 +31,7 @@ if mod(i-1, interval) == 0
     ylabel('objective');
     xlabel('iteration');
     set(gca, 'FontSize', 16);
-    subplot(312);
+    subplot(412);
     inds = max(1, length(obj) - window):length(obj);
     plot(inds, obj(inds));
     ylabel('objective');
@@ -37,12 +39,25 @@ if mod(i-1, interval) == 0
     title(sprintf('norm of gradient: %d', norm(g)));
     set(gca, 'FontSize', 16);
     
-    subplot(313);
+    subplot(413);
     semilogy(changeX);
     ylabel('Change in x');
     xlabel('Iteration');
     
     title(sprintf('Optimality condition %d', optCond));
+   
+    subplot(414);
+    if ~isempty(varargin)
+        func = varargin{1};
+        
+        diff(end+1) = abs(fastDerivativeCheck(func, x));
+    end
+    plot(diff);
+    title('Difference between numerical versus user-supplied derivative');
+    
+    if diff(end) > 1e10
+        keyboard;
+    end
     
     drawnow;
 end
