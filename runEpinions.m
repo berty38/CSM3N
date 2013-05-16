@@ -10,9 +10,11 @@ initMinFunc()
 %% Data
 
 % create ground truth
-n = 100;
-p = 0.2;
-gt = sign(sprandn(n, n, p));
+% n = 100;
+% p = 0.2;
+% gt = sign(sprandn(n, n, p));
+loadEpinions()
+n = size(gt,1);
 
 % create graph rep
 graph = abs(gt);
