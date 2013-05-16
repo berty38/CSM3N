@@ -3,8 +3,8 @@ function [Aeq, beq, F] = triadMarginals(obs, edges, triads, edgeIdx, triadIdx)
 % Generates the marginal constraints and feature map for
 %   edges as local features and triads as relational features.
 % obs - observed edge values, in {-1,+1}
-% edges - lise of edges
-% triads = list of triads
+% edges - list of edges (i,j)
+% triads = list of triads (i,j,k)
 % Aeq, beq - pseudomarginal constraints
 % F - feature map for unobserved variables
 
@@ -21,8 +21,8 @@ FJ = [];
 FV = [];
 nextF = 1;
 
-% Local feature map is just identity.
-FI(1:2*n_e) = 1:2*n_e;
+% Local feature map
+FI(1:2*n_e) = repmat([1;2], n_e, 1);
 FJ(1:2*n_e) = 1:2*n_e;
 FV(1:2*n_e) = 1;
 nextF = nextF + 2*n_e;
@@ -33,21 +33,14 @@ for t=1:n_t
 	j = triads(t,2);
 	k = triads(t,3);
 	states = triadStates(obs(i,j), obs(i,k), obs(j,k));
-	sIdx = triadIdx(t,1);
-	nextState = 0;
-	for s=1:8
-		if ismember(s, states)
-			FI(nextF) = 2*n_e + 8*(t-1) + s;
-			FJ(nextF) = sIdx + nextState;
-			FV(nextF) = 1;
-			nextF = nextF + 1;
-			nextState = nextState + 1;
-		end
-	end
+	FI(nextF:nextF+length(states)-1) = 2 + states;
+	FJ(nextF:nextF+length(states)-1) = triadIdx(t,1):triadIdx(t,2);
+	FV(nextF:nextF+length(states)-1) = 1;
+	nextF = nextF + length(states);
 end
 
 % Create F
-F = sparse(FI, FJ, FV, 2*n_e + 8*n_t, n_y);
+F = sparse(FI, FJ, FV, 10, n_y);
 
 
 %% Marginal constraints

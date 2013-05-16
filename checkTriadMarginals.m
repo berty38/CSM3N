@@ -1,20 +1,15 @@
 clear
 
 % create ground truth
-gt = sparse(8,8);
-gt(1,2)=-1;
-gt(1,3)=-1;
-gt(1,5)=1;
-gt(2,5)=1;
-gt(4,6)=-1;
-gt(6,7)=1;
-gt(2,8)=-1;
-gt(5,8)=1;
+n = 100;
+p = 0.2;
+gt = sign(sprandn(n, n, p));
 
 % unobserve some edges values
 obs = gt;
-obs(2,5)=0;
-obs(2,8)=0;
+idx = find(obs);
+idx = randsample(idx, floor(0.5*length(idx)));
+obs(idx) = 0;
 
 % create graph rep
 graph = abs(gt);
@@ -22,7 +17,7 @@ graph = abs(gt);
 % setup
 [obsEdges, obsTriads, unoEdges, unoTriads] = setupTriads(graph, obs);
 [unoEdgeIdx, unoTriadIdx] = genTriadIndex(obs, unoEdges, unoTriads);
-f_o = computeObsTriadFeatures(obsEdges, obsTriads);
+f_o = computeObsTriadFeatures(obs, obsEdges, obsTriads);
 [Aeq, beq, F] = triadMarginals(obs, unoEdges, unoTriads, unoEdgeIdx, unoTriadIdx);
 
 % create marginal vector using ground truth
@@ -50,6 +45,10 @@ fprintf('Size of Aeq: %d x %d\n', size(Aeq,1), size(Aeq,2));
 fprintf('Size of beq: %d x %d\n', size(beq,1), size(beq,2));
 fprintf('Size of F:   %d x %d\n', size(F,1), size(F,2));
 fprintf('Size of y:   %d x %d\n', size(y,1), size(y,2));
+
+% check feature map
+f_o
+Fy = F * y
 
 % check marginal constraints
 fprintf('Distance to constraint satisfaction: %f\n', sum(Aeq*y-beq));
