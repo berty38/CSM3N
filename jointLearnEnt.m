@@ -4,7 +4,10 @@ function [w, kappa, y, x] = jointLearnEnt(featureMap, labels, scope, S, C, x0)
 % kappa, and worst-violator y for a given featureMap, label set, MRF
 % structure (S), and slack parameter (C)
 
-func = @(y, varargin) jointObjectiveEnt(y, featureMap, labels, scope, S, C, featureMap*labels, varargin);
+za = 1e-3;
+zb = 1e-3;
+
+func = @(y, varargin) jointObjectiveEnt(y, featureMap, labels, scope, S, C, featureMap*labels, za, zb, varargin);
 
 ell = zeros(size(labels));
 ell(scope) = 1 - 2*labels(scope);
@@ -52,4 +55,6 @@ kappa = x(d+1);
 lambda = x(d+2:end);
 
 y = exp((featureMap'*w + ell + S.Aeq'*lambda)/kappa - 1);
+
+kappa = kappa + zb;
 

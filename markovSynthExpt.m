@@ -3,16 +3,39 @@ initMinFunc;
 
 clear;
 
-n = 500;
-pObs = .4;
+chainLength = 100;
+pObs = .25;
 pSame = .9;
+
+numTest = 100;
 
 k = 3;
 
-[X,Y,A] = generateMarkovChain(n, k, pSame, pObs);
-[Xte,Yte,Ate] = generateMarkovChain(n, k, pSame, pObs);
+%% generate chains
+
+[X,Y,A] = generateMarkovChain(chainLength, k, pSame, pObs);
+
+for i = 1:numTest
+    [Xte{i},Yte{i},Ate{i}] = generateMarkovChain(chainLength, k, pSame, pObs);
+end
 
 plot(Y);
+
+%% generate overcomplete representation of ground truth
+
+labels = zeros(chainLength*k + nnz(A)*k^2, 1);
+for i = 1:chainLength
+    labels(localIndex(i, Y(i), chainLength)) = 1;
+end
+
+[I, J] = find(A);
+for i = 1:nnz(A)
+    labels(pairwiseIndex(i, Y(I(i)), Y(J(i)), chainLength, k)) = 1;
+end
+
+
+%% construct structural constraints
+
 
 [Aeq, beq, featureMap] = edge_marginals(X', A, k);
 
@@ -20,29 +43,18 @@ S.Aeq = Aeq;
 S.beq = beq;
 S.A = [];
 S.b = [];
-S.lb = zeros(n*k + nnz(A)*k^2, 1);
+S.lb = zeros(chainLength*k + nnz(A)*k^2, 1);
 S.ub = [];
 S.x0 = [];
 
-[AeqTe, beqTe, featureMapTe] = edge_marginals(Xte', Ate, k);
-
-assert(all(AeqTe(:) == S.Aeq(:)));
-
-
-labels = zeros(n*k + nnz(A)*k^2, 1);
-
-for i = 1:n
-    labels(localIndex(i, Y(i), n)) = 1;
+for i = 1:numTest
+    [AeqTe, beqTe, featureMapTe{i}] = edge_marginals(Xte{i}', Ate{i}, k);
+    assert(all(AeqTe(:) == S.Aeq(:)));
 end
 
-[I, J] = find(A);
-for i = 1:nnz(A)
-    labels(pairwiseIndex(i, Y(I(i)), Y(J(i)), n, k)) = 1;
-end
+%%
 
-
-scope = 1:n*k;
-
+scope = 1:chainLength*k;
 
 Cvec = 10.^linspace(-4,4,10);
 
@@ -59,16 +71,26 @@ for cIndex = 1:length(Cvec)
         end
         
         y = dualInference(w, featureMap, kappa, S);
-        pred = predictMax(y(1:k*n), n, k);
+        pred = predictMax(y(1:k*chainLength), chainLength, k);
         
-        trainError(vanilla, cIndex) = nnz(pred ~= Y) / n;
+        trainError(vanilla, cIndex) = nnz(pred ~= Y) / chainLength;
         
-        y = dualInference(w, featureMapTe, kappa, S);
-        pred = predictMax(y(1:k*n), n, k);
-        testError(vanilla, cIndex) = nnz(pred ~= Yte) / n;
+        for i = 1:numTest
+            y = dualInference(w, featureMapTe{i}, kappa, S);
+            pred = predictMax(y(1:k*chainLength), chainLength, k);
+            testError(vanilla, cIndex, i) = nnz(pred ~= Yte{i}) / chainLength;
+        end
+        meanTestError(vanilla, cIndex) = mean(testError(vanilla, cIndex, :));
+        varTestError(vanilla, cIndex) = var(testError(vanilla, cIndex, :));
     end
 end
 %%
 trainError
+meanTestError
+varTestError
 
-testError
+
+%%
+[I,J] = find(X);
+
+baseError = nnz(J==Y) / length(Y);

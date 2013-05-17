@@ -9,6 +9,7 @@ X = zeros(n, k);
 Y = zeros(n,1);
 
 Y(1) = randi(k);
+X(1, Y(1)) = 1;
 
 for i = 2:n
     
@@ -28,4 +29,3 @@ for i = 2:n
         X(i, randi(k)) = 1;
     end
 end
-

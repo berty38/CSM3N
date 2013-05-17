@@ -9,7 +9,7 @@ loadWebKBFull;
 
 %%
 
-Cvec = 10.^linspace(-2, 1, 10);
+Cvec = 10.^linspace(-3, 1, 15);
 
 savedW = cell(length(Cvec), 4, 2);
 savedKappa = zeros(length(Cvec), 4, 2);
@@ -82,7 +82,7 @@ for one_example = 0:0
         counterTr = sparse(Ytr(I), Ytr(J), ones(size(I)));
         [I,J] = find(graphTe);
         counterTe = sparse(Yte(I), Yte(J), ones(size(I)));
-
+        
         subplot(211);
         imagesc(counterTr)
         title('Training');
@@ -159,14 +159,14 @@ for one_example = 0:0
         %%
         
         for cIndex = 1:length(Cvec)
-            for vanilla = 2:2
+            for vanilla = 1:2
                 
                 C = Cvec(cIndex);
                 
                 fprintf('Starting run with C = %f, fold %d\n', C, split);
                 
                 scope = 1:nTr*k;
-%                                 scope = 1:length(groundTruth);
+                %                                 scope = 1:length(groundTruth);
                 
                 if vanilla == 1
                     % [w, violation, xi] = vanillaM3N(featureMap, groundTruth, scope, S, C);
@@ -204,10 +204,10 @@ for one_example = 0:0
             end
             if one_example
                 %                     save webKBFullNoLinksResultsJoint1Ex;
-                %                 save webKBFullResultsJoint1Ex;
+                save webKBFullResultsJoint1Ex;
             else
                 %                     save webKBFullNoLinksResultsJoint3Ex;
-                %                 save webKBFullResultsJoint3Ex;
+                save webKBFullResultsJoint3Ex;
             end
             
         end
