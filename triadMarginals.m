@@ -12,6 +12,7 @@ function [Aeq, beq, F] = triadMarginals(obs, edges, triads, edgeIdx, triadIdx)
 n_e = size(edges,1);
 n_t = size(triads,1);
 n_y = triadIdx(end);
+n_y_t = triadIdx(end) - triadIdx(1);
 
 
 %% Generate feature map
@@ -45,10 +46,14 @@ F = sparse(FI, FJ, FV, 10, n_y);
 
 %% Marginal constraints
 
-AI = [];
-AJ = [];
-AV = [];
-beq = [];
+% For efficiency, we'll preallocate the constraint arrays using a ballpark
+% size.
+n_beq = n_e + n_t + n_y_t;
+n_Aeq = n_y + 4*n_y_t;
+AI = zeros(n_Aeq,1);
+AJ = zeros(n_Aeq,1);
+AV = zeros(n_Aeq,1);
+beq = zeros(n_beq,1);
 nextA = 1;
 nextb = 1;
 
@@ -161,6 +166,6 @@ for t=1:n_t
 end
 
 % Create Aeq, beq
-Aeq = sparse(AI, AJ, AV, length(beq), n_y);
-beq = beq';
+beq = beq(1:nextb-1);
+Aeq = sparse(AI(1:nextA-1), AJ(1:nextA-1), AV(1:nextA-1), length(beq), n_y);
 
