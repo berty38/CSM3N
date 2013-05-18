@@ -4,8 +4,9 @@ if ~exist('scope', 'var')
     scope = 1:size(featureMap,2);
 end
 
-options = optimset('display', 'final');
+options = optimset('display', 'off');
 options.MSK_IPAR_INTPNT_NUM_THREADS = 4;
+% options.MSK_IPAR_NUM_THREADS = 4;
 S.options = options;
 
 ell = zeros(size(labels));

@@ -4,8 +4,8 @@ function [w, kappa, y, x] = jointLearnEnt(featureMap, labels, scope, S, C, x0)
 % kappa, and worst-violator y for a given featureMap, label set, MRF
 % structure (S), and slack parameter (C)
 
-za = 1e-3;
-zb = 1e-3;
+za = 0;
+zb = 0;
 
 func = @(y, varargin) jointObjectiveEnt(y, featureMap, labels, scope, S, C, featureMap*labels, za, zb, varargin);
 
@@ -28,7 +28,7 @@ clear options;
 options.Corr = 200;
 options.LS_type = 0;
 options.LS_interp = 0;
-options.Display = 'final';
+options.Display = 'off';
 options.outputFcn = @inferenceStat;
 options.Method = 'lbfgs';
 options.maxIter = 8000;
