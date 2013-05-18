@@ -12,10 +12,10 @@ end
 
 % set numeric constants
 if ~exist('za', 'var') || isempty(za)
-    za = 1e-4;
+    za = 1e-5;
 end
 if ~exist('zb', 'var') || isempty(za)
-    zb = 1e-4;
+    zb = 1e-5;
 end
 
 [d,m] = size(F);

@@ -10,22 +10,22 @@ F = randn(d,m);
 labels = zeros(m,1);
 labels(5) = 1;
 
-scope = true(m,1);
 S.Aeq = ones(n,m);
 S.beq = ones(n,1);
 
-x = zeros(d+n+1,1);
-x(d+1) = 1;
+singletons = 3;
+
+x = zeros(d+n,1);
 
 C = .1;
 
-func = @(y) jointObjectiveEnt(y, F, labels, scope, S, C, F*labels);
+func = @(x) crfObjective(x, F, S, C, singletons, F*labels);
 
 derivativeCheck(func, x, 1, 0);
 
-[w, kappa, y, x0] = jointLearnEnt(F, labels, scope, S, C, x);
+[w, x0] = learnCRF(F, labels, singletons, S, C);
 
 derivativeCheck(func, x0, 1, 0);
 
-y2 = dualInference(w, F, kappa, S);
+y = crfInference(w, F, singletons, S, C);
 

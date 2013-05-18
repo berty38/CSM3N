@@ -14,7 +14,7 @@ setenv('MOSEKLM_LICENSE_FILE', ...
     sprintf('%s/licenses/mosek.lic', mosek_path));
 
 addpath(sprintf('%s/tools/platform/osx64x86/bin', mosek_path));
-addpath(sprintf('%s/toolbox/r2012a', mosek_path));
+addpath(sprintf('%s/toolbox/r2009b', mosek_path));
 
 currdir = pwd;
 

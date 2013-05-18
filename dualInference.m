@@ -13,8 +13,8 @@ end
 
 fun = @(y) obj(y, exp((featureMap'*w + ell)/kappa - 1), kappa, S);
 
-options.Display = 'final';
-% options.outputFcn = @inferenceStat;
+options.Display = 'off';
+options.outputFcn = @inferenceStat;
 options.Method = 'lbfgs';
 options.GradObj = 'on';
 options.MaxFunEvals = 8000;
@@ -37,8 +37,7 @@ function [f,g] = obj(lambda, eFtwlm1 , kappa, S)
 %y = exp((Ftw + ell + S.Aeq'*lambda)/kappa - 1);
 y = eFtwlm1 .* exp(S.Aeq'*lambda / kappa);
 
-f = kappa * sum(y)...
-    - S.beq'*lambda;
+f = kappa * sum(y) - S.beq'*lambda;
 
 g = S.Aeq * y - S.beq;
 

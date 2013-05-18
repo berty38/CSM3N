@@ -9,7 +9,7 @@ loadWebKBFull;
 
 %%
 
-Cvec = 10.^linspace(-3, 1, 15);
+Cvec = 10.^linspace(-2, 2, 15);
 
 savedW = cell(length(Cvec), 4, 2);
 savedKappa = zeros(length(Cvec), 4, 2);
@@ -158,7 +158,7 @@ for one_example = 0:0
         x0 = [];
         %%
         
-        for cIndex = 1:length(Cvec)
+        for cIndex = length(Cvec):-1:1
             for vanilla = 1:2
                 
                 C = Cvec(cIndex);
