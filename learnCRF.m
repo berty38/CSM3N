@@ -1,6 +1,6 @@
 function [w, x] = learnCRF(featureMap, labels, singletons, S, C)
 
-func = @(x) crfObjective(x, featureMap, S, C, singletons, featureMap*labels);
+func = @(x, varargin) crfObjective(x, featureMap, S, C, singletons, featureMap*labels, varargin);
 
 [d,m] = size(featureMap);
 
@@ -24,7 +24,7 @@ if ~exist('x0', 'var') || isempty(x0)
     x0 = zeros(d + c,1);
 end
 
-x = minFunc(func, x0, options);
+x = minFunc(func, x0, options, func);
 
 w = x(1:d);
 lambda = x(d+1:end);

@@ -18,7 +18,7 @@ obj(end+1) = f;
 changeX(end+1) = norm(x - prevX);
 prevX = x;
 
-interval = 100;
+interval = 500;
 window = 500;
 
 if mod(i-1, interval) == 0
@@ -47,10 +47,11 @@ if mod(i-1, interval) == 0
     title(sprintf('Optimality condition %d', optCond));
    
     subplot(414);
+    cla
     if ~isempty(varargin)
         func = varargin{1};
         
-        diff(end+1) = abs(fastDerivativeCheck(func, x));
+        diff(end+1) = abs(fastDerivativeCheck(func, x)) / norm(g);
     end
     plot(diff);
     title('Difference between numerical versus user-supplied derivative');

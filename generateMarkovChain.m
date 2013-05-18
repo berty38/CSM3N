@@ -8,11 +8,17 @@ X = zeros(n, k);
 
 Y = zeros(n,1);
 
-Y(1) = randi(k);
-X(1, Y(1)) = 1;
+i = 1;
+% generate first node
+Y(i) = randi(k);
+obs = rand < pObs;
+if obs
+    X(i,Y(i)) = 1;
+else
+    X(i, randi(k)) = 1;
+end
 
-for i = 2:n
-    
+for i = 2:n    
     same = rand < pSame;
     
     if same

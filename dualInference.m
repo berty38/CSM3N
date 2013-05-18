@@ -11,7 +11,9 @@ if kappa == 0
     return;
 end
 
-fun = @(y) obj(y, exp((featureMap'*w + ell)/kappa - 1), kappa, S);
+Ftwlk1 = (featureMap'*w + ell)/kappa - 1;
+
+fun = @(y, varargin) obj(y, Ftwlk1, kappa, S, varargin);
 
 options.Display = 'off';
 options.outputFcn = @inferenceStat;
@@ -24,21 +26,27 @@ options.LS_interp = 0;
 % options.progTol = 1e-6;
 % options.optTol = 1e-3;
 
-lambda = zeros(size(S.Aeq,1),1);
+% lambda = zeros(size(S.Aeq,1),1);
+lambda = initLambda(featureMap'*w + ell, kappa, S.Aeq);
 
-[lambda, fval] = minFunc(fun,lambda,options);
-
+[lambda, fval] = minFunc(fun,lambda,options, fun);
 
 y = exp((featureMap' * w + ell + S.Aeq'*lambda)/kappa - 1);
 
 
-function [f,g] = obj(lambda, eFtwlm1 , kappa, S)
+function [f,g] = obj(lambda, Ftwlk1 , kappa, S, varargin)
 
 %y = exp((Ftw + ell + S.Aeq'*lambda)/kappa - 1);
-y = eFtwlm1 .* exp(S.Aeq'*lambda / kappa);
+y = exp(Ftwlk1 + S.Aeq'*lambda / kappa);
 
 f = kappa * sum(y) - S.beq'*lambda;
 
 g = S.Aeq * y - S.beq;
 
 
+function lambda = initLambda(Ftwl, kappa, A)
+
+c = size(A,1);
+options.MSK_IPAR_INTPNT_NUM_THREADS = 4;
+options.Display = 'notify';
+lambda = quadprog(speye(c), zeros(c,1), A'/kappa, -Ftwl/kappa, [], [], [], [], [], options);

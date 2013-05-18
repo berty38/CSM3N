@@ -1,4 +1,4 @@
-function [f,g] = crfObjective(x, F, S, C, singletons, Flabels)
+function [f,g] = crfObjective(x, F, S, C, singletons, Flabels, varargin)
 
 [d,m] = size(F);
 
