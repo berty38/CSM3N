@@ -9,7 +9,7 @@ fun = @(lambda, varargin) obj(lambda, w, featureMap, S, singletons, varargin);
 s = ones(m,1);
 s(singletons+1:end) = 1;
 
-options.Display = 'iter';
+options.Display = 'off';
 options.outputFcn = @inferenceStat;
 options.Method = 'lbfgs';
 options.GradObj = 'on';
