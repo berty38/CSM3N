@@ -9,7 +9,7 @@ fun = @(lambda, varargin) obj(lambda, w, featureMap, S, singletons, varargin);
 s = ones(m,1);
 s(singletons+1:end) = 1;
 
-options.Display = 'off';
+options.Display = 'iter';
 options.outputFcn = @inferenceStat;
 options.Method = 'lbfgs';
 options.GradObj = 'on';
@@ -37,7 +37,7 @@ s(singletons+1:end) = 1;
 
 y = exp(s .* (F'*w + S.Aeq'*lambda) - 1);
 
-f = S.beq'*lambda;
+f =  sum(y) - S.beq'*lambda;
 
 if nargout == 2
     g = S.Aeq * (s .* y) - S.beq;
