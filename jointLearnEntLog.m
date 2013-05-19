@@ -1,4 +1,4 @@
-function [w, kappa, y, x] = jointLearnEntLog(featureMap, labels, scope, S, C, x0)
+function [w, kappa, y, x] = jointLearnEntLog(featureMap, labels, scope, S, C, x0, varargin)
 
 % optimizes the joint minimization objective, learning the optimal w,
 % kappa, and worst-violator y for a given featureMap, label set, MRF

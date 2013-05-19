@@ -174,7 +174,7 @@ for one_example = 0:0
                     kappa = 0;
                 else
                     %                     [w, kappa, y, x0] = jointLearnEnt(featureMap, groundTruth, scope, S, C, x0);
-                    [w, kappa, y] = jointLearnEnt(featureMap, groundTruth, scope, S, C);
+                    [w, kappa, y] = jointLearnEntLog(featureMap, groundTruth, scope, S, C);
                 end
                 %%
                 y = dualInference(w, featureMap, kappa, S);

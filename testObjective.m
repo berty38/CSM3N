@@ -18,15 +18,16 @@ S.beq = ones(n,1);
 x = zeros(d+n+1,1);
 x(d+1) = 0;
 
-C = .5;
+C = 5;
+kappa = 1;
 
-func = @(y) jointObjectiveEntLog(y, F, labels, scope, S, C, F*labels);
+func = @(y) jointObjectiveEntLog(y, F, labels, scope, S, C, F*labels, kappa);
 
-[f, g] = jointObjectiveEntLog(x, F, labels, scope, S, C, F*labels)
+[f, g] = jointObjectiveEntLog(x, F, labels, scope, S, C, F*labels, kappa)
 
 derivativeCheck(func, x, 1, 0);
 
-[w, kappa, y, x0] = jointLearnEntLog(F, labels, scope, S, C, x);
+[w, kappa, y, x0] = jointLearnEntLog(F, labels, scope, S, C, x, kappa);
 
 derivativeCheck(func, x0, 1, 0);
 

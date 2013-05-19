@@ -13,7 +13,7 @@ end
 [d,m] = size(F);
 
 w = x(1:d);
-logkappa = x(d+1); % don't let kappa be negative
+logkappa = x(d+1);
 lambda = x(d+2:end);
 
 A = S.Aeq;
@@ -32,11 +32,14 @@ y = exp(logy);
 loss = sum(sumy) - w'*F_labels - b'*lambda;
 
 f = 0.5*(w'*w) / (C * exp(2*logkappa)) + loss;
+% f = 0.5*(w'*w) / C + 1 / (2*C*exp(2*logkappa)) + loss;
 
 if nargout == 2
     gradW = w / (C*exp(2*logkappa)) + (F * y) - F_labels;
-    gradKappa =  - w'*w * exp(-2*logkappa) / C +  y'*(exp(logkappa) - FtwlAl);
+%     gradW = w / C + (F * y) - F_labels;
     gradLambda = A * y - b;
+    gradKappa =  - w'*w * exp(-2*logkappa) / C +  y'*(exp(logkappa) - FtwlAl);
+%     gradKappa =  - exp(-2*logkappa) / C +  y'*(exp(logkappa) - FtwlAl);
     
     g = [gradW; gradKappa; gradLambda];
 end

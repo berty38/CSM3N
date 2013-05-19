@@ -4,24 +4,25 @@ initMinFunc;
 clear;
 
 chainLength = 50;
+chainLengthTe = 50;
 pObs = .2;
-pSame = .9;
+pSame = .3;
 
 numTest = 10;
-totalRuns = 20;
+totalRuns = 1;
 
 k = 3;
 
-scope = 1:chainLength*k;
+scope = 1:chainLength*k;% + (chainLength-1)*k^2;
 
-Cvec = 10.^linspace(-3,5,15);
+Cvec = 10.^linspace(-3,5,10);
 % Cvec = [1e-2 1e-1];
 
 total = totalRuns * length(Cvec) * 3;
 
 totalTimer = tic;
 count = 0;
-
+%%
 for run = 1:totalRuns
     
     %% generate chains
@@ -64,7 +65,13 @@ for run = 1:totalRuns
     
     for i = 1:numTest
         [AeqTe, beqTe, featureMapTe{i}] = edge_marginals(Xte{i}', Ate{i}, k);
-        %     assert(all(AeqTe(:) == S.Aeq(:)));
+        Ste{i}.Aeq = Aeq;
+        Ste{i}.beq = beq;
+        Ste{i}.A = [];
+        Ste{i}.b = [];
+        Ste{i}.lb = zeros(chainLengthTe*k + nnz(Ate{i})*k^2, 1);
+        Ste{i}.ub = [];
+        Ste{i}.x0 = [];
     end
     
     %%
