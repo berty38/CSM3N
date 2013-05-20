@@ -18,13 +18,18 @@ else
     X(i, randi(k)) = 1;
 end
 
+% classProbs = 1:k;
+% classProbs = classProbs / sum(classProbs);
+classProbs = ones(k,1)/k; % uniform
+classCDF = cumsum(classProbs);
+
 for i = 2:n    
     same = rand < pSame;
     
     if same
         Y(i) = Y(i-1);
     else
-        Y(i) = randi(k);
+        Y(i) = find(rand < classCDF, 1, 'first');
     end
     
     obs = rand < pObs;

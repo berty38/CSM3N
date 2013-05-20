@@ -3,13 +3,13 @@ initMinFunc;
 
 clear;
 
-chainLength = 50;
-chainLengthTe = 50;
+chainLength = 500;
+chainLengthTe = 500;
 pObs = .2;
-pSame = .3;
+pSame = .7;
 
-numTest = 10;
-totalRuns = 1;
+numTest = 5;
+totalRuns = 5;
 
 k = 3;
 
@@ -18,7 +18,7 @@ scope = 1:chainLength*k;% + (chainLength-1)*k^2;
 Cvec = 10.^linspace(-3,5,10);
 % Cvec = [1e-2 1e-1];
 
-total = totalRuns * length(Cvec) * 3;
+total = totalRuns * length(Cvec) * 6;
 
 totalTimer = tic;
 count = 0;
@@ -77,7 +77,8 @@ for run = 1:totalRuns
     %%
     
     for cIndex = length(Cvec):-1:1
-        for type = 3:-1:1
+        figure(1);
+        for type = 2:-1:1%6:-1:1
             
             C = Cvec(cIndex);
             
@@ -89,6 +90,15 @@ for run = 1:totalRuns
                 w = learnCRF(featureMap, labels, chainLength*k, S, C);
                 kappa = 1;
                 y = crfInference(w, featureMap, chainLength*k, S);
+            elseif type == 3
+                [w, kappa] = jointLearnEntLog(featureMap, labels, scope, S, C, [], 1);
+                y = dualInference(w, featureMap, kappa, S);
+            elseif type == 4
+                [w, kappa] = jointLearnEntLog(featureMap, labels, scope, S, C, [], 2);
+                y = dualInference(w, featureMap, kappa, S);
+            elseif type == 5
+                [w, kappa] = jointLearnEntLog(featureMap, labels, scope, S, C, [], 3);
+                y = dualInference(w, featureMap, kappa, S);
             else
                 [w, kappa] = jointLearnEntLog(featureMap, labels, scope, S, C);
                 y = dualInference(w, featureMap, kappa, S);
@@ -115,7 +125,7 @@ for run = 1:totalRuns
             
             count = count + 1;
             fprintf('Finished %d of %d, elapsed %f minutes, eta %f\n', count,...
-                total, toc(totalTimer)/60, (total - count)*(toc(totalTimer)/count)/60); 
+                total, toc(totalTimer)/60, (total - count)*(toc(totalTimer)/count)/60);
             
         end
     end
@@ -127,77 +137,77 @@ for run = 1:totalRuns
         baseErrorTe(run, i) = nnz(Xpred~=Yte{i}) / chainLength;
     end
     
+    
+    %%
+    figure(2);
+    subplot(311);
+    semilogx(Cvec, mean(baseError,2) * ones(size(Cvec)), '--ko');
+    hold on;
+    semilogx(Cvec, mean(trainError, 3), 'x-');
+    hold off;
+    % axis([min(Cvec), max(Cvec), 0, 1])
+    title(sprintf('pObs = %f, pSame = %f', pObs, pSame));
+    ylabel('Training error', 'FontSize', 14);
+    xlabel('C', 'FontSize', 14);
+    set(gca, 'FontSize', 14);
+    legend('Local error', 'M3N', 'CRF', 'CSM3N k=1', 'CSM3N k=2', 'CSM3N k=3', 'CSM3N');
+    
+    subplot(312);
+    semilogx(Cvec, mean(baseErrorTe(:)) * ones(size(Cvec)), '--ko');
+    hold on;
+    semilogx(Cvec, mean(meanTestError, 3), 'x-');
+    hold off;
+    % axis([min(Cvec), max(Cvec), 0, 1])
+    ylabel('Avg. testing error', 'FontSize', 14);
+    xlabel('C', 'FontSize', 14);
+    set(gca, 'FontSize', 14);
+    
+    subplot(313);
+    semilogx(Cvec, mean(varTestError, 3), 'x-');
+    xlabel('C', 'FontSize', 14);
+    ylabel('Testing variance', 'FontSize', 14);
+    set(gca, 'FontSize', 14);
+    
+    %%
+    figure(3)
+    
+    subplot(411);
+    
+    loglog(Cvec, savedKappa(:,6,run))
+    ylabel('kappa');
+    xlabel('C');
+    title('kappa for current run of CSM3N');
+    
+    
+    norms = zeros(length(Cvec),1);
+    subplot(412);
+    for i = 1:length(Cvec)
+        norms(i) = norm(savedW{i, 1, run});
+    end
+    loglog(Cvec, norms.^2);
+    ylabel('||w||^2');
+    xlabel('C');
+    title('norm for M3N');
+    
+    
+    subplot(413);
+    for i = 1:length(Cvec)
+        norms(i) = norm(savedW{i, 2, run});
+    end
+    loglog(Cvec, norms.^2);
+    ylabel('||w||^2');
+    xlabel('C');
+    title('norm for CRF');
+    
+    
+    subplot(414);
+    for i = 1:length(Cvec)
+        norms(i) = norm(savedW{i, 3, run});
+    end
+    loglog(Cvec, norms.^2);
+    ylabel('||w||^2');
+    xlabel('C');
+    title('norm for CSM3N');
+    
 end
 
-%%
-figure(1);
-subplot(311);
-semilogx(Cvec, mean(baseError,2) * ones(size(Cvec)), '--k');
-hold on;
-semilogx(Cvec, mean(trainError, 3), 'x-');
-hold off;
-% axis([min(Cvec), max(Cvec), 0, 1])
-title(sprintf('pObs = %f, pSame = %f', pObs, pSame));
-ylabel('Training error', 'FontSize', 14);
-xlabel('C', 'FontSize', 14);
-set(gca, 'FontSize', 14);
-legend('Local error', 'M3N', 'CRF', 'CSM3N');
-
-subplot(312);
-semilogx(Cvec, mean(baseErrorTe(:)) * ones(size(Cvec)), '--k');
-hold on;
-semilogx(Cvec, mean(meanTestError, 3), 'x-');
-hold off;
-% axis([min(Cvec), max(Cvec), 0, 1])
-ylabel('Avg. testing error', 'FontSize', 14);
-xlabel('C', 'FontSize', 14);
-set(gca, 'FontSize', 14);
-
-subplot(313);
-semilogx(Cvec, mean(varTestError, 3), 'x-');
-xlabel('C', 'FontSize', 14);
-ylabel('Testing variance', 'FontSize', 14);
-set(gca, 'FontSize', 14);
-
-%%
-figure(2)
-
-run = 1;
-
-subplot(411);
-
-loglog(Cvec, savedKappa(:,3,run))
-ylabel('kappa');
-xlabel('C');
-title('kappa for 1st run of CSM3N');
-
-
-norms = zeros(length(Cvec),1);
-subplot(412);
-for i = 1:length(Cvec)
-    norms(i) = norm(savedW{i, 1, run});
-end
-loglog(Cvec, norms.^2);
-ylabel('||w||^2');
-xlabel('C');
-title('norm for M3N');
-
-
-subplot(413);
-for i = 1:length(Cvec)
-    norms(i) = norm(savedW{i, 2, run});
-end
-loglog(Cvec, norms.^2);
-ylabel('||w||^2');
-xlabel('C');
-title('norm for CRF');
-
-
-subplot(414);
-for i = 1:length(Cvec)
-    norms(i) = norm(savedW{i, 3, run});
-end
-loglog(Cvec, norms.^2);
-ylabel('||w||^2');
-xlabel('C');
-title('norm for CSM3N');
