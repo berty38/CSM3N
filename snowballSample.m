@@ -116,3 +116,10 @@ while n_e > 0
 	end
 end
 
+%% Convert edge lists to graphs
+n = size(graph,1);
+train = sparse(train(:,1), train(:,2), ones(size(train,1),1), n, n);
+test = sparse(test(:,1), test(:,2), ones(size(test,1),1), n, n);
+
+
+

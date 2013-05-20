@@ -1,7 +1,7 @@
-% global mosek_path
-% global minFunc_path
-% mosek_path = '/Users/Ben/Code/mosek/6';
-% minFunc_path = '/Users/Ben/Code/MATLAB/';
+global mosek_path
+global minFunc_path
+mosek_path = '/Users/blondon/Code/mosek/6';
+minFunc_path = '/Users/blondon/Code/MATLAB/';
 initMosek;
 initMinFunc;
 
@@ -9,21 +9,20 @@ clear;
 
 chainLength = 200;
 chainLengthTe = 200;
-pObs = .2;
-pSame_tr = .9;
-pSame_te = 0.1;
+pObs_tr = 0.2;
+pObs_te = 0.5;
+pSame_tr = 0.9;
+pSame_te = 0.2;
 
-numTest = 20;
-totalRuns = 1;
+numTest = 10;
+totalRuns = 5;
 
 k = 3;
 
 scope = 1:chainLength*k;% + (chainLength-1)*k^2;
 
-Cvec = 10.^linspace(-2,5,16);
-%Cvec = 10.^linspace(0,5,6);
-%Cvec = 10.^linspace(-2,8,10);
-% Cvec = [1e-2 1e-1];
+% Cvec = 10.^linspace(-2,5,16);
+Cvec = 10.^linspace(-2,6,9);
 
 total = totalRuns * length(Cvec) * 3;
 
@@ -34,10 +33,10 @@ for run = 1:totalRuns
     
     %% generate chains
     
-    [X,Y,A] = generateMarkovChain(chainLength, k, pSame_tr, pObs);
+    [X,Y,A] = generateMarkovChain(chainLength, k, pSame_tr, pObs_tr);
     
     for i = 1:numTest
-        [Xte{i},Yte{i},Ate{i}] = generateMarkovChain(chainLength, k, pSame_te, pObs);
+        [Xte{i},Yte{i},Ate{i}] = generateMarkovChain(chainLength, k, pSame_te, pObs_te);
         %     Ate{i} = 0*Ate{i};
     end
     
@@ -85,7 +84,7 @@ for run = 1:totalRuns
     
     for cIndex = length(Cvec):-1:1
         figure(1);
-		types = [3 2 1];
+		types = [4 3 2 1];
 		for t=1:length(types)
 			type = types(t);
             
@@ -99,17 +98,11 @@ for run = 1:totalRuns
                 w = learnCRF(featureMap, labels, chainLength*k, S, C);
                 kappa = 1;
                 y = crfInference(w, featureMap, chainLength*k, S);
-%             elseif type == 3
-%                 [w, kappa] = jointLearnEntLog(featureMap, labels, scope, S, C, [], 1);
-%                 y = dualInference(w, featureMap, kappa, S);
-%             elseif type == 4
-%                 [w, kappa] = jointLearnEntLog(featureMap, labels, scope, S, C, [], 2);
-%                 y = dualInference(w, featureMap, kappa, S);
-%             elseif type == 5
-%                 [w, kappa] = jointLearnEntLog(featureMap, labels, scope, S, C, [], 3);
-%                 y = dualInference(w, featureMap, kappa, S);
+            elseif type == 3
+                [w, kappa] = jointLearnEntLog(featureMap, labels, scope, S, C, [], 1);
+                y = dualInference(w, featureMap, kappa, S);
             else
-                [w, kappa] = jointLearnEntLog(featureMap, labels, scope, S, 100*C);
+                [w, kappa] = jointLearnEntLog(featureMap, labels, scope, S, C);
                 y = dualInference(w, featureMap, kappa, S);
             end
             
@@ -156,12 +149,11 @@ for run = 1:totalRuns
     semilogx(Cvec, mean(trainError, 3), 'x-');
     hold off;
     % axis([min(Cvec), max(Cvec), 0, 1])
-    title(sprintf('pObs = %f, pSame = %f', pObs, pSame_tr));
+    title(sprintf('pObs = %f, pSame = %f', pObs_tr, pSame_tr));
     ylabel('Training error', 'FontSize', 14);
     xlabel('C', 'FontSize', 14);
     set(gca, 'FontSize', 14);
-    legend('Local error', 'M3N', 'CRF', 'CSM3N');
-%     legend('Local error', 'M3N', 'CRF', 'CSM3N k=1', 'CSM3N k=2', 'CSM3N k=3', 'CSM3N');
+    legend('Local error', 'M3N', 'CRF', 'CSM3N k=1', 'CSM3N');
     
     subplot(312);
     semilogx(Cvec, mean(baseErrorTe(:)) * ones(size(Cvec)), '--ko');
@@ -169,7 +161,7 @@ for run = 1:totalRuns
     semilogx(Cvec, mean(meanTestError, 3), 'x-');
     hold off;
     % axis([min(Cvec), max(Cvec), 0, 1])
-    title(sprintf('pObs = %f, pSame = %f', pObs, pSame_te));
+    title(sprintf('pObs = %f, pSame = %f', pObs_te, pSame_te));
     ylabel('Avg. testing error', 'FontSize', 14);
     xlabel('C', 'FontSize', 14);
     set(gca, 'FontSize', 14);
