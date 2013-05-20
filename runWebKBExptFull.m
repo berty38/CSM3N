@@ -9,7 +9,7 @@ loadWebKBFull;
 
 %%
 
-Cvec = 10.^linspace(-2, 2, 15);
+Cvec = 10.^linspace(-3, 5, 20);
 
 savedW = cell(length(Cvec), 4, 2);
 savedKappa = zeros(length(Cvec), 4, 2);
@@ -17,12 +17,12 @@ trainError = zeros(length(Cvec), 4, 2);
 testError = zeros(length(Cvec), 4, 2);
 
 
-total = 4 * length(Cvec) * 2 * 2;
+total = 4 * length(Cvec) * 2;
 
 count = 1;
 totalTimer = tic;
 
-for one_example = 0:0
+for one_example = 1:1
     
     clear trainError testError savedW savedKappa;
     
@@ -159,7 +159,7 @@ for one_example = 0:0
         %%
         
         for cIndex = length(Cvec):-1:1
-            for vanilla = 1:2
+            for type = 1:2
                 
                 C = Cvec(cIndex);
                 
@@ -168,33 +168,33 @@ for one_example = 0:0
                 scope = 1:nTr*k;
                 %                                 scope = 1:length(groundTruth);
                 
-                if vanilla == 1
+                if type == 1
                     % [w, violation, xi] = vanillaM3N(featureMap, groundTruth, scope, S, C);
                     w = vanillaM3N(featureMap, groundTruth, scope, S, C);
                     kappa = 0;
                 else
-                    %                     [w, kappa, y, x0] = jointLearnEnt(featureMap, groundTruth, scope, S, C, x0);
+                    % [w, kappa, y, x0] = jointLearnEnt(featureMap, groundTruth, scope, S, C, x0);
                     [w, kappa, y] = jointLearnEntLog(featureMap, groundTruth, scope, S, C);
                 end
                 %%
                 y = dualInference(w, featureMap, kappa, S);
                 
-                trainError(cIndex, split, vanilla) =  sum(predictMax(y(1:k*nTr), nTr, k) ~= predictMax(groundTruth(1:k*nTr), nTr, k)) / nTr;
+                trainError(cIndex, split, type) =  sum(predictMax(y(1:k*nTr), nTr, k) ~= predictMax(groundTruth(1:k*nTr), nTr, k)) / nTr;
                 
                 % run on test split
                 
                 y = dualInference(w, featureMapTe, kappa, Ste);
                 
-                testError(cIndex, split, vanilla) =  sum(predictMax(y(1:k*nTe), nTe, k) ~= predictMax(groundTruthTe(1:k*nTe), nTe, k)) / nTe;
+                testError(cIndex, split, type) =  sum(predictMax(y(1:k*nTe), nTe, k) ~= predictMax(groundTruthTe(1:k*nTe), nTe, k)) / nTe;
                 
                 %%
-                fprintf('Training error %f\n', trainError(cIndex, split, vanilla));
-                fprintf('Testing error %f\n', testError(cIndex, split, vanilla));
+                fprintf('Training error %f\n', trainError(cIndex, split, type));
+                fprintf('Testing error %f\n', testError(cIndex, split, type));
                 fprintf('kappa = %d\n', kappa);
                 fprintf('0.5 * ||w||^2 = %f\n', 0.5 * w' * w);
                 
-                savedW{cIndex, split, vanilla}= w;
-                savedKappa(cIndex, split, vanilla) = kappa;
+                savedW{cIndex, split, type}= w;
+                savedKappa(cIndex, split, type) = kappa;
                 
                 
                 fprintf('%2.1f percent done (%d of %d). ETA %f minutes for %d runs at %f seconds per run\n', 100 * count / total, ...

@@ -7,14 +7,14 @@ initMinFunc;
 
 clear;
 
-chainLength = 500;
-chainLengthTe = 500;
+chainLength = 200;
+chainLengthTe = 200;
 pObs = .2;
-pSame = .9;
+pSame_tr = .9;
 pSame_te = 0.1;
 
-numTest = 10;
-totalRuns = 10;
+numTest = 20;
+totalRuns = 1;
 
 k = 3;
 
@@ -22,6 +22,8 @@ scope = 1:chainLength*k;% + (chainLength-1)*k^2;
 
 Cvec = 10.^linspace(-2,5,16);
 %Cvec = 10.^linspace(0,5,6);
+%Cvec = 10.^linspace(-2,8,10);
+% Cvec = [1e-2 1e-1];
 
 total = totalRuns * length(Cvec) * 3;
 
@@ -144,7 +146,7 @@ for run = 1:totalRuns
         baseErrorTe(run, i) = nnz(Xpred~=Yte{i}) / chainLength;
     end
     
-    save markovSynthResults;
+    save markovSynthResults2;
     
     %%
     figure(2);
