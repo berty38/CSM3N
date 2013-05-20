@@ -6,19 +6,19 @@ clear;
 chainLength = 500;
 chainLengthTe = 500;
 pObs = .2;
-pSame = .7;
+pSame = .9;
 
-numTest = 5;
-totalRuns = 5;
+numTest = 10;
+totalRuns = 10;
 
 k = 3;
 
 scope = 1:chainLength*k;% + (chainLength-1)*k^2;
 
-Cvec = 10.^linspace(-3,5,10);
+Cvec = 10.^linspace(-2,5,16);
 % Cvec = [1e-2 1e-1];
 
-total = totalRuns * length(Cvec) * 6;
+total = totalRuns * length(Cvec) * 3;
 
 totalTimer = tic;
 count = 0;
@@ -78,7 +78,7 @@ for run = 1:totalRuns
     
     for cIndex = length(Cvec):-1:1
         figure(1);
-        for type = 2:-1:1%6:-1:1
+        for type = 3:-1:1
             
             C = Cvec(cIndex);
             
@@ -90,17 +90,17 @@ for run = 1:totalRuns
                 w = learnCRF(featureMap, labels, chainLength*k, S, C);
                 kappa = 1;
                 y = crfInference(w, featureMap, chainLength*k, S);
-            elseif type == 3
-                [w, kappa] = jointLearnEntLog(featureMap, labels, scope, S, C, [], 1);
-                y = dualInference(w, featureMap, kappa, S);
-            elseif type == 4
-                [w, kappa] = jointLearnEntLog(featureMap, labels, scope, S, C, [], 2);
-                y = dualInference(w, featureMap, kappa, S);
-            elseif type == 5
-                [w, kappa] = jointLearnEntLog(featureMap, labels, scope, S, C, [], 3);
-                y = dualInference(w, featureMap, kappa, S);
+%             elseif type == 3
+%                 [w, kappa] = jointLearnEntLog(featureMap, labels, scope, S, C, [], 1);
+%                 y = dualInference(w, featureMap, kappa, S);
+%             elseif type == 4
+%                 [w, kappa] = jointLearnEntLog(featureMap, labels, scope, S, C, [], 2);
+%                 y = dualInference(w, featureMap, kappa, S);
+%             elseif type == 5
+%                 [w, kappa] = jointLearnEntLog(featureMap, labels, scope, S, C, [], 3);
+%                 y = dualInference(w, featureMap, kappa, S);
             else
-                [w, kappa] = jointLearnEntLog(featureMap, labels, scope, S, C);
+                [w, kappa] = jointLearnEntLog(featureMap, labels, scope, S, 100*C);
                 y = dualInference(w, featureMap, kappa, S);
             end
             
@@ -137,6 +137,7 @@ for run = 1:totalRuns
         baseErrorTe(run, i) = nnz(Xpred~=Yte{i}) / chainLength;
     end
     
+    save markovSynthResults;
     
     %%
     figure(2);
@@ -150,7 +151,8 @@ for run = 1:totalRuns
     ylabel('Training error', 'FontSize', 14);
     xlabel('C', 'FontSize', 14);
     set(gca, 'FontSize', 14);
-    legend('Local error', 'M3N', 'CRF', 'CSM3N k=1', 'CSM3N k=2', 'CSM3N k=3', 'CSM3N');
+    legend('Local error', 'M3N', 'CRF', 'CSM3N');
+%     legend('Local error', 'M3N', 'CRF', 'CSM3N k=1', 'CSM3N k=2', 'CSM3N k=3', 'CSM3N');
     
     subplot(312);
     semilogx(Cvec, mean(baseErrorTe(:)) * ones(size(Cvec)), '--ko');
@@ -173,7 +175,7 @@ for run = 1:totalRuns
     
     subplot(411);
     
-    loglog(Cvec, savedKappa(:,6,run))
+    loglog(Cvec, savedKappa(:,end,run))
     ylabel('kappa');
     xlabel('C');
     title('kappa for current run of CSM3N');
