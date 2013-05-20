@@ -2,6 +2,10 @@
 
 
 clear;
+global mosek_path
+global minFunc_path
+mosek_path = '/Users/Ben/Code/mosek/6';
+minFunc_path = '/Users/Ben/Code/MATLAB/';
 initMosek;
 initMinFunc;
 
@@ -129,7 +133,7 @@ for one_example = 0:1
         %%
         
         for cIndex = length(Cvec):-1:1
-            for vanilla = 1:2
+            for vanilla = 1:1
                 
                 C = Cvec(cIndex);
                 
