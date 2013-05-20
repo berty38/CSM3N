@@ -2,8 +2,8 @@
 clear
 global mosek_path
 global minFunc_path
-mosek_path = '/Users/blondon/Code/mosek/7';
-minFunc_path = '/Users/blondon/Code/MATLAB/';
+mosek_path = '/Users/Ben/Code/mosek/6';
+minFunc_path = '/Users/Ben/Code/MATLAB/';
 initMosek()
 initMinFunc()
 
@@ -13,8 +13,7 @@ initMinFunc()
 % n = 100;
 % p = 0.2;
 % gt = sign(sprandn(n, n, p));
-loadEpinions()
-n = size(gt,1);
+loadEpinions();
 
 % create graph rep
 graph = abs(gt);
@@ -24,16 +23,22 @@ graph = abs(gt);
 n_fold = 1;
 
 for fold=1:n_fold
-	%% Seup
+	
+	% Snowball sample train/test
+	[g_tr, g_te] = snowballSample(graph);
+	gt_tr = gt .* g_tr;
+	gt_te = gt .* g_te;
+
+	%% Setup train
 	
 	% Unobserve some edges values
-	obs = gt;
+	obs = gt_tr;
 	idx = find(obs);
 	idx = randsample(idx, floor(0.5*length(idx)));
 	obs(idx) = 0;
 
 	% Setup experiment
-	[obsEdges, obsTriads, unoEdges, unoTriads] = setupTriads(graph, obs);
+	[obsEdges, obsTriads, unoEdges, unoTriads] = setupTriads(g_tr, obs);
 	[unoEdgeIdx, unoTriadIdx] = genTriadIndex(obs, unoEdges, unoTriads);
 	f_o = computeObsTriadFeatures(obs, obsEdges, obsTriads);
 	[Aeq, beq, F] = triadMarginals(obs, unoEdges, unoTriads, unoEdgeIdx, unoTriadIdx);
@@ -46,7 +51,7 @@ for fold=1:n_fold
 	for ue=1:n_e
 		i = unoEdges(ue,1);
 		j = unoEdges(ue,2);
-		if gt(i,j) < 0
+		if gt_tr(i,j) < 0
 			y(2*ue-1) = 1;
 		else
 			y(2*ue) = 1;
@@ -56,7 +61,7 @@ for fold=1:n_fold
 		i = unoTriads(ut,1);
 		j = unoTriads(ut,2);
 		k = unoTriads(ut,3);
-		idx = triadIndex(unoTriadIdx,unoTriads,obs,ut,gt(i,j),gt(i,k),gt(j,k));
+		idx = triadIndex(unoTriadIdx,unoTriads,obs,ut,gt_tr(i,j),gt_tr(i,k),gt_tr(j,k));
 		y(idx) = 1;
 	end
 
@@ -70,16 +75,19 @@ for fold=1:n_fold
 	%% Let's do some learnin'!
 	C = 1;
 	scope = 1:2*n_e;
-	S.A = [];
-	S.b = [];
-	S.Aeq = Aeq;
-	S.beq = beq;
-	S.lb = zeros(n_y,1);
-	S.ub = [];
-	S.x0 = [];
+	S_tr.A = [];
+	S_tr.b = [];
+	S_tr.Aeq = Aeq;
+	S_tr.beq = beq;
+	S_tr.lb = zeros(n_y,1);
+	S_tr.ub = [];
+	S_tr.x0 = [];
 	
 % 	w = vanillaM3N(F, y, scope, S, C);
-	w = jointLearnEnt(F, y, scope, S, C);
+	[w, kappa] = jointLearnEnt(F, y, scope, S_tr, C);
+
+	%% Evaluation
+	yhat = dualInference(w, F, kappa, S_te);
 
 end
 
