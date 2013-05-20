@@ -2,10 +2,6 @@
 
 
 clear;
-global mosek_path
-global minFunc_path
-mosek_path = '/Users/Ben/Code/mosek/6';
-minFunc_path = '/Users/Ben/Code/MATLAB/';
 initMosek;
 initMinFunc;
 

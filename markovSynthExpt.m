@@ -1,3 +1,7 @@
+% global mosek_path
+% global minFunc_path
+% mosek_path = '/Users/Ben/Code/mosek/6';
+% minFunc_path = '/Users/Ben/Code/MATLAB/';
 initMosek;
 initMinFunc;
 
@@ -7,6 +11,7 @@ chainLength = 500;
 chainLengthTe = 500;
 pObs = .2;
 pSame = .9;
+pSame_te = 0.1;
 
 numTest = 10;
 totalRuns = 10;
@@ -16,7 +21,7 @@ k = 3;
 scope = 1:chainLength*k;% + (chainLength-1)*k^2;
 
 Cvec = 10.^linspace(-2,5,16);
-% Cvec = [1e-2 1e-1];
+%Cvec = 10.^linspace(0,5,6);
 
 total = totalRuns * length(Cvec) * 3;
 
@@ -27,10 +32,10 @@ for run = 1:totalRuns
     
     %% generate chains
     
-    [X,Y,A] = generateMarkovChain(chainLength, k, pSame, pObs);
+    [X,Y,A] = generateMarkovChain(chainLength, k, pSame_tr, pObs);
     
     for i = 1:numTest
-        [Xte{i},Yte{i},Ate{i}] = generateMarkovChain(chainLength, k, pSame, pObs);
+        [Xte{i},Yte{i},Ate{i}] = generateMarkovChain(chainLength, k, pSame_te, pObs);
         %     Ate{i} = 0*Ate{i};
     end
     
@@ -78,7 +83,9 @@ for run = 1:totalRuns
     
     for cIndex = length(Cvec):-1:1
         figure(1);
-        for type = 3:-1:1
+		types = [3 2 1];
+		for t=1:length(types)
+			type = types(t);
             
             C = Cvec(cIndex);
             
@@ -147,7 +154,7 @@ for run = 1:totalRuns
     semilogx(Cvec, mean(trainError, 3), 'x-');
     hold off;
     % axis([min(Cvec), max(Cvec), 0, 1])
-    title(sprintf('pObs = %f, pSame = %f', pObs, pSame));
+    title(sprintf('pObs = %f, pSame = %f', pObs, pSame_tr));
     ylabel('Training error', 'FontSize', 14);
     xlabel('C', 'FontSize', 14);
     set(gca, 'FontSize', 14);
@@ -160,6 +167,7 @@ for run = 1:totalRuns
     semilogx(Cvec, mean(meanTestError, 3), 'x-');
     hold off;
     % axis([min(Cvec), max(Cvec), 0, 1])
+    title(sprintf('pObs = %f, pSame = %f', pObs, pSame_te));
     ylabel('Avg. testing error', 'FontSize', 14);
     xlabel('C', 'FontSize', 14);
     set(gca, 'FontSize', 14);
