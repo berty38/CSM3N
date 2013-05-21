@@ -1,4 +1,4 @@
-function [X,Y,A] = genSecondOrderChain(n, k, pHop, pSame, pObs)
+function [X,Y,A] = genSecondOrderChain(n, k, p2Hop, pSame, pObs)
 
 I = 1:n-1;
 J = 2:n;
@@ -25,11 +25,17 @@ if same
 else
 	Y(2) = find(rand < classCDF, 1, 'first');
 end
+obs = rand < pObs;
+if obs
+	X(2,Y(2)) = 1;
+else
+	X(2,randi(k)) = 1;
+end
 
 for i=3:n
 	
 	% Generate hidden state
-	hop = (rand < pHop) + 1;
+	hop = (rand < p2Hop) + 1;
 	same = rand < pSame(hop);
 	if same
 		Y(i) = Y(i-hop);
