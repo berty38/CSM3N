@@ -21,4 +21,5 @@ gt(triu(gt==0 & gt'==-1)) = -1;
 % Upper-triangulize
 gt = triu(gt);
 
-
+%% Cleanup the workspace (why not!)
+clear epinions;
