@@ -17,12 +17,12 @@ trainError = zeros(length(Cvec), 4, 2);
 testError = zeros(length(Cvec), 4, 2);
 
 
-total = 4 * length(Cvec) * 2;
+total = 4 * length(Cvec) * 3 * 2;
 
 count = 1;
 totalTimer = tic;
 
-for one_example = 1:1
+for one_example = 0:1
     
     clear trainError testError savedW savedKappa;
     
@@ -133,9 +133,6 @@ for one_example = 1:1
         for i = 1:nnz(graphTr)
             ind = pairwiseIndex(i, Ytr(I(i)), Ytr(J(i)), nTr, k);
             groundTruth(ind) = 1;
-            %
-            %             counter(Ytr(I(i)), Ytr(J(i))) = ...
-            %                 counter(Ytr(I(i)), Ytr(J(i))) + 1;
         end
         
         
@@ -172,18 +169,29 @@ for one_example = 1:1
                     % [w, violation, xi] = vanillaM3N(featureMap, groundTruth, scope, S, C);
                     w = vanillaM3N(featureMap, groundTruth, scope, S, C);
                     kappa = 0;
-                else
+                elseif type == 2
                     % [w, kappa, y, x0] = jointLearnEnt(featureMap, groundTruth, scope, S, C, x0);
                     [w, kappa, y] = jointLearnEntLog(featureMap, groundTruth, scope, S, C);
+                else
+                    w = learnCRF(featureMap, groundTruth, nTr*k, S, C);
+                    kappa = 1;
                 end
                 %%
-                y = dualInference(w, featureMap, kappa, S);
+                if type == 3
+                    y = crfInference(w, featureMap, nTr*k, S);
+                else
+                    y = dualInference(w, featureMap, kappa, S);
+                end
                 
                 trainError(cIndex, split, type) =  sum(predictMax(y(1:k*nTr), nTr, k) ~= predictMax(groundTruth(1:k*nTr), nTr, k)) / nTr;
                 
                 % run on test split
                 
-                y = dualInference(w, featureMapTe, kappa, Ste);
+                if type == 3
+                    y = crfInference(w, featureMap, nTe*k, S);
+                else
+                    y = dualInference(w, featureMapTe, kappa, Ste);
+                end
                 
                 testError(cIndex, split, type) =  sum(predictMax(y(1:k*nTe), nTe, k) ~= predictMax(groundTruthTe(1:k*nTe), nTe, k)) / nTe;
                 
@@ -203,10 +211,10 @@ for one_example = 1:1
                 
             end
             if one_example
-                %                     save webKBFullNoLinksResultsJoint1Ex;
+%                 save webKBSmallResultsJoint1Ex;
                 save webKBFullResultsJoint1Ex;
             else
-                %                     save webKBFullNoLinksResultsJoint3Ex;
+%                 save webKBSmallResultsJoint3Ex;
                 save webKBFullResultsJoint3Ex;
             end
             

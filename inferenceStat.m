@@ -18,7 +18,7 @@ obj(end+1) = f;
 changeX(end+1) = norm(x - prevX);
 prevX = x;
 
-interval = 500;
+interval = inf;
 window = 500;
 
 if mod(i-1, interval) == 0

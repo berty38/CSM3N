@@ -1,12 +1,12 @@
 clear;
 %  file1 = 'webKBFullNoLinksResultsJoint3Ex';
 %  file3 = 'webKBFullNoLinksResultsJoint3Ex';
- file1 = 'webKBFullResultsJoint3Ex';
+ file1 = 'webKBFullResultsJoint1Ex';
  file3 = 'webKBFullResultsJoint3Ex';
 % file1 = 'webKBSynthResultsJoint1Ex';
 % file3 = 'webKBSynthResultsJoint3Ex';
 % file1 = 'webKBSmallResultsJoint1Ex';
-% file3 = 'webKBSmallResultsJoint3Ex';
+% file3 = 'webKBSmallResultsJoint1Ex';
 %%
 load(file1);
 
@@ -64,8 +64,8 @@ for i = 1:length(schools)
     semilogx(Cvec, testError(:,i,1), 'r-x');
     hold on;
     semilogx(Cvec, trainError(:,i,1), 'r--x');
-    semilogx(Cvec, testError(:,i,2), 'b-x');
-    semilogx(Cvec, trainError(:,i,2), 'b--x');
+    semilogx(Cvec/100, testError(:,i,2), 'b-x');
+    semilogx(Cvec/100, trainError(:,i,2), 'b--x');
     hold off;
     title(sprintf('Train on 3, test on %s', schools{i}));
     xlabel('C');

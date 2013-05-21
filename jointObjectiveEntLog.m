@@ -21,7 +21,7 @@ b = S.beq;
 
 ell = zeros(size(labels));
 ell(scope) = 1-2*labels(scope);
-% delta = sum(labels(scope));
+delta = sum(labels(scope));
 
 FtwlAl = (F'*w + ell + A'*lambda);
 
@@ -31,15 +31,17 @@ y = exp(logy);
 
 loss = sum(sumy) - w'*F_labels - b'*lambda;
 
-f = 0.5*(w'*w) / (C * exp(2*logkappa)) + loss;
-% f = 0.5*(w'*w) / C + 1 / (2*C*exp(2*logkappa)) + loss;
+% f = 0.5*(w'*w) / (C * exp(2*logkappa)) + loss;
+f = 0.5*(w'*w) / C + 1 / (2*C*exp(2*logkappa)) + loss + delta;
+% f = 0.5*(w'*w) / C + loss + delta;
 
 if nargout == 2
-    gradW = w / (C*exp(2*logkappa)) + (F * y) - F_labels;
-%     gradW = w / C + (F * y) - F_labels;
+%     gradW = w / (C*exp(2*logkappa)) + (F * y) - F_labels;
+    gradW = w / C + (F * y) - F_labels;
     gradLambda = A * y - b;
-    gradKappa =  - w'*w * exp(-2*logkappa) / C +  y'*(exp(logkappa) - FtwlAl);
-%     gradKappa =  - exp(-2*logkappa) / C +  y'*(exp(logkappa) - FtwlAl);
+%     gradKappa =  - w'*w * exp(-2*logkappa) / C +  y'*(exp(logkappa) - FtwlAl);
+    gradKappa =  - exp(-2*logkappa) / C +  y'*(exp(logkappa) - FtwlAl);
+%     gradKappa =  y'*(exp(logkappa) - FtwlAl);
     
     g = [gradW; gradKappa; gradLambda];
 end

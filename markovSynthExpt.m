@@ -43,6 +43,7 @@ for run = 1:totalRuns
     plot(Y);
     % A = 0*A;
     
+    
     %% generate overcomplete representation of ground truth
     
     labels = zeros(chainLength*k + nnz(A)*k^2, 1);
@@ -79,6 +80,27 @@ for run = 1:totalRuns
         Ste{i}.ub = [];
         Ste{i}.x0 = [];
     end
+    
+    %% compute true-weight predictions
+    
+    
+    w = handTune(pObs, pSame_te, k);
+    for i = 1:numTest
+        y = crfInference(w, featureMapTe{i}, chainLength*k, S);
+%         y = dualInference(w, featureMap, 0, S);
+        pred = predictMax(y(1:k*chainLength), chainLength, k);
+        trueWeightErrorTe(i, run) = nnz(pred ~= Yte{i}) / chainLength;
+    end
+    
+    %% compute base local error
+    [Xpred, ~] = find(X');
+    baseError(run) = nnz(Xpred~=Y) / length(Y);
+    for i = 1:numTest
+        [Xpred, ~] = find(Xte{i}');
+        baseErrorTe(run, i) = nnz(Xpred~=Yte{i}) / chainLength;
+    end
+    
+    
     
     %%
     
@@ -132,14 +154,7 @@ for run = 1:totalRuns
         end
     end
     
-    [Xpred, ~] = find(X');
-    baseError(run) = nnz(Xpred~=Y) / length(Y);
-    for i = 1:numTest
-        [Xpred, ~] = find(Xte{i}');
-        baseErrorTe(run, i) = nnz(Xpred~=Yte{i}) / chainLength;
-    end
-    
-    save markovSynthResults2;
+    save markovSynthResultsShort;
     
     %%
     figure(2);

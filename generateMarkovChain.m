@@ -4,8 +4,8 @@ I = 1:n-1;
 J = 2:n;
 A = sparse(I,J,ones(n-1,1), n, n);
 
-%X = zeros(n, k + 1);
-X = zeros(n,k);
+% X = zeros(n, k+1);
+X = zeros(n, k);
 
 Y = zeros(n,1);
 
@@ -16,8 +16,8 @@ obs = rand < pObs;
 if obs
     X(i,Y(i)) = 1;
 else
-    %X(i, randi(k+1)) = 1;
-    X(i,randi(k)) = 1;
+%         X(i, k+1) = 1;
+    X(i, randi(k)) = 1;
 end
 
 % classProbs = 1:k;
@@ -25,7 +25,7 @@ end
 classProbs = ones(k,1)/k; % uniform
 classCDF = cumsum(classProbs);
 
-for i = 2:n    
+for i = 2:n
     same = rand < pSame;
     
     if same
@@ -39,7 +39,7 @@ for i = 2:n
     if obs
         X(i,Y(i)) = 1;
     else
-        %X(i, randi(k+1)) = 1;
-        X(i,randi(k)) = 1;
+%             X(i, k+1) = 1;
+        X(i, randi(k)) = 1;
     end
 end
