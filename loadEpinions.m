@@ -1,12 +1,16 @@
 %% Load data
 
-epinions = load('epinions/epinions-small.txt');
-n = max(max(epinions(:,1:2)));
-gt = sparse(epinions(:,1),epinions(:,2),2*epinions(:,3)-1,n,n);
+% Small set
+% epinions = load('epinions/epinions-small.txt');
+% epinions(:,3) = 2*epinions(:,3) - 1;
 
-% load 'epinions/epinions-big.txt'
-% epinions_big(:,1:2) = epinions_big(:,1:2) + 1;
-% gt = spconvert(epinions_big);
+% Big set
+epinions = load('epinions/epinions-big.txt');
+epinions(:,1:2) = epinions(:,1:2) + 1;
+
+% Convert to sparse matrix
+n = max(max(epinions(:,1:2)));
+gt = sparse(epinions(:,1),epinions(:,2),epinions(:,3),n,n);
 
 %% Fix disagreements
 
