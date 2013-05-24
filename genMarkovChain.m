@@ -1,4 +1,4 @@
-function [X,Y,A,pSame] = genMarkovChain(n, k, pSameMin, pSameMax, pObs)
+function [X,Y,A,pSame] = genMarkovChain(n, k, pObs, pSameMin, pSameMax, pSameBias)
 
 assert(pSameMin >= 0)
 assert(pSameMax <= 1)
@@ -13,7 +13,12 @@ classProbs = ones(k,1)/k;
 classCDF = cumsum(classProbs);
 
 % Draw hidden global variable to determine hidden state mixing
-pSame = pSameMin + rand * (pSameMax - pSameMin);
+if nargin >= 6
+	pSameLow = rand < pSameBias;
+	pSame = pSameLow*pSameMin + (1-pSameLow)*pSameMax;
+else
+	pSame = pSameMin + rand * (pSameMax - pSameMin);
+end
 
 % Generate first node
 Y(1) = randi(k);

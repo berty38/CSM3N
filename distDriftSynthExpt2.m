@@ -13,6 +13,7 @@ chainLength = 300;
 pObs = 0.2;
 pSameMin = 0.2;
 pSameMax = 0.9;
+pSameBias = 0.5;
 
 numTest = 10;
 totalRuns = 10;
@@ -33,10 +34,10 @@ for run = 1:totalRuns
 	
 	%% generate chains
 	
-	[X,Y,A,pSame_tr(run)] = genMarkovChain(chainLength, k, pObs, pSameMin, pSameMax);
+	[X,Y,A,pSame_tr(run)] = genMarkovChain(chainLength, k, pObs, pSameMin, pSameMax, pSameBias);
 	
 	for i = 1:numTest
-		[Xte{i},Yte{i},Ate{i},pSame_te(run,i)] = genMarkovChain(chainLength, k, pObs, pSameMin, pSameMax);
+		[Xte{i},Yte{i},Ate{i},pSame_te(run,i)] = genMarkovChain(chainLength, k, pObs, pSameMin, pSameMax, pSameBias);
 	end
 	
 	
@@ -160,7 +161,7 @@ for run = 1:totalRuns
 	hold on;
 	semilogx(Cvec, mean(trainError(types,:,:), 3), 'x-');
 	hold off;
-	title(sprintf('pSameRange=[%.2f ... %.2f], pObs=%.2f', pSameMin, pSameMax, pObs));
+	title(sprintf('pSameBias=%.2f, pSameRange=[%.2f ... %.2f], pObs=%.2f', pSameBias, pSameMin, pSameMax, pObs));
 	ylabel('Training error', 'FontSize', 14);
 	xlabel('C', 'FontSize', 14);
 	set(gca, 'FontSize', 14);
@@ -182,9 +183,9 @@ for run = 1:totalRuns
 	xlabel('C', 'FontSize', 14);
 	ylabel('Testing variance', 'FontSize', 14);
 	set(gca, 'FontSize', 14);
-
-	print(fig2, '-dpng', 'distDriftExpt.png');
-
+	
+	print(fig2, '-dpng', 'distDriftExpt2.png');
+	
 	%% Plot weight norms
 	
 	figure(3)
