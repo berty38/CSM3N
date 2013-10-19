@@ -8,20 +8,20 @@ initMinFunc;
 clear;
 
 k = 3;
-chainLength = 200;
+chainLength = 300;
 
 pObs = 0.2;
 pSameMin = 0.2;
 pSameMax = 0.9;
 
-numTest = 10;
-totalRuns = 10;
+numTest = 20;
+totalRuns = 20;
 
 types = [1 2 3];
 
 Cvec = 10.^linspace(-2,6,9);
 
-maxSamp = 10;
+maxSamp = 20;
 nStabSamp = min(maxSamp, chainLength*(k-1));
 
 scope = 1:chainLength*k;
