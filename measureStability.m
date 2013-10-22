@@ -1,4 +1,4 @@
-function stab = measureStability(w, X, k, F, S, type, kappa)
+function [stab_mu, stab_y] = measureStability(w, X, k, F, S, type, kappa)
 
 % w : weight vector.
 % X : d x n matrix, representing n nodes taking d values.
@@ -7,12 +7,16 @@ function stab = measureStability(w, X, k, F, S, type, kappa)
 % S : constraints structure.
 % type : type of inference to use: 0 for dual, 1 for CRF
 % kappa : modulus of convexity
+%
+% stab_mu : 1-norm stability of marginals
+% stab_y : Hamming stability of decoding
 
 % dimensions
 [d,n] = size(X);
 
 % initialize stability to 0
-stab = 0;
+stab_mu = 0;
+stab_y = 0;
 			
 % run initial inference
 if type == 1
@@ -20,6 +24,7 @@ if type == 1
 else
 	y_0 = dualInference(w, F, kappa, S);
 end
+pred_0 = predictMax(y_0(1:k*n), n, k);
 
 % run perturbed inference
 for i=1:n
@@ -43,9 +48,16 @@ for i=1:n
 			end
 			
 			% measure 1-norm and store max
-			delta = norm(y_0-y_1, 1);
-			if stab < delta
-				stab = delta;
+			delta = norm(y_0(1:k*n)-y_1(1:k*n), 1);
+			if stab_mu < delta
+				stab_mu = delta;
+			end
+	
+			% measure Hamming distance of decoding and store max
+			pred_1 = predictMax(y_1(1:k*n), n, k);
+			delta = nnz(pred_0 ~= pred_1);
+			if stab_y < delta
+				stab_y = delta;
 			end
 	
 			% replace perturbed value

@@ -1,9 +1,5 @@
 function [X,Y,A,pSame] = genMarkovChain(n, k, pObs, pSameMin, pSameMax, pSameBias)
 
-assert(pSameMin >= 0)
-assert(pSameMax <= 1)
-assert(pSameMax >= pSameMin)
-
 X = zeros(n,k);
 Y = zeros(n,1);
 A = sparse(1:(n-1), 2:n, ones(n-1,1), n, n);
@@ -16,8 +12,10 @@ classCDF = cumsum(classProbs);
 if nargin >= 6
 	pSameLow = rand < pSameBias;
 	pSame = pSameLow*pSameMin + (1-pSameLow)*pSameMax;
-else
+elseif nargin >= 5
 	pSame = pSameMin + rand * (pSameMax - pSameMin);
+else
+	pSame = pSameMin;
 end
 
 % Generate first node

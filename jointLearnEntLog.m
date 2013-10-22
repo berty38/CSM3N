@@ -39,7 +39,7 @@ else
     options.LS_type = 0;
     options.LS_interp = 0;
     options.Display = 'off';
-    options.outputFcn = @inferenceStat;
+%     options.outputFcn = @inferenceStat;
     options.Method = 'lbfgs';
     options.maxIter = 8000;
     options.MaxFunEvals = 8000;

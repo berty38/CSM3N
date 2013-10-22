@@ -16,7 +16,7 @@ Ftwlk1 = (featureMap'*w + ell)/kappa - 1;
 fun = @(y, varargin) obj(y, Ftwlk1, kappa, S, varargin);
 
 options.Display = 'off';
-options.outputFcn = @inferenceStat;
+% options.outputFcn = @inferenceStat;
 options.Method = 'lbfgs';
 options.GradObj = 'on';
 options.MaxFunEvals = 8000;

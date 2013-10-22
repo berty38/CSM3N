@@ -1,4 +1,4 @@
-function stab = measureStabilityRand2(w, X, k, F, S, nSamp, type, kappa)
+function [stab_mu, stab_y] = measureStabilityRand2(w, X, k, F, S, nSamp, type, kappa)
 
 % w : weight vector.
 % X : d x n matrix, representing n nodes taking d values.
@@ -8,12 +8,16 @@ function stab = measureStabilityRand2(w, X, k, F, S, nSamp, type, kappa)
 % nSamp : number of samples
 % type : type of inference to use: 0 for dual, 1 for CRF
 % kappa : modulus of convexity
+%
+% stab_mu : 1-norm stability of marginals
+% stab_y : Hamming stability of decoding
 
 % dimensions
 [d,n] = size(X);
 
 % initialize stability to 0
-stab = 0;
+stab_mu = 0;
+stab_y = 0;
 			
 % run initial inference
 if type == 1
@@ -21,6 +25,7 @@ if type == 1
 else
 	y_0 = dualInference(w, F, kappa, S);
 end
+pred_0 = predictMax(y_0(1:k*n), n, k);
 
 % select random subset of (node,value) combinations
 offVals = find(~X);
@@ -53,10 +58,17 @@ for s=1:nSamp
 		y_1 = dualInference(w, F, kappa, S);
 	end
 
-	% measure 1-norm and store max
-	delta = norm(y_0-y_1, 1);
-	if stab < delta
-		stab = delta;
+	% measure 1-norm of marginals and store max
+	delta = norm(y_0(1:k*n)-y_1(1:k*n), 1);
+	if stab_mu < delta
+		stab_mu = delta;
+	end
+	
+	% measure Hamming distance of decoding and store max
+	pred_1 = predictMax(y_1(1:k*n), n, k);
+	delta = nnz(pred_0 ~= pred_1);
+	if stab_y < delta
+		stab_y = delta;
 	end
 	
 	% replace perturbed value
