@@ -7,7 +7,8 @@ function [w, kappa, y, x] = jointLearnEnt(featureMap, labels, scope, S, C, x0)
 za = 0;
 zb = 0;
 
-func = @(y, varargin) jointObjectiveEnt(y, featureMap, labels, scope, S, C, featureMap*labels, za, zb, varargin);
+func = @(y, varargin) jointObjectiveEnt(...
+	y, featureMap, labels, scope, S, C, featureMap*labels, za, zb, varargin);
 
 ell = zeros(size(labels));
 ell(scope) = 1 - 2*labels(scope);
@@ -29,12 +30,12 @@ options.Corr = 200;
 options.LS_type = 0;
 options.LS_interp = 0;
 options.Display = 'off';
-options.outputFcn = @inferenceStat;
+% options.outputFcn = @inferenceStat;
 options.Method = 'lbfgs';
 options.maxIter = 8000;
 options.MaxFunEvals = 8000;
-% options.progTol = 1e-6;
-% options.optTol = 1e-3;
+options.progTol = 1e-6;
+options.optTol = 1e-3;
 
 c = size(S.Aeq,1);
 

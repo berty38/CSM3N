@@ -1,22 +1,27 @@
 global mosek_path
 global minFunc_path
-mosek_path = '/Users/blondon/Code/mosek/6';
-minFunc_path = '/Users/blondon/Code/MATLAB/';
+mosek_path = '/Users/Ben/Code/mosek/6';
+minFunc_path = '/Users/Ben/Code/MATLAB/';
 initMosek;
 initMinFunc;
 
 clear;
 
-k = 3;
+% for testing
+k = 2;
+chainLength = 20;
+numTest = 2;
+totalRuns = 1;
+% for experiment (comment out next few lines for testing)
+k = 10;
 chainLength = 200;
+numTest = 20;
+totalRuns = 20;
 
 pObs = 0.2;
 pSame = 0.9;
 
-numTest = 20;
-totalRuns = 20;
-
-types = [1 2];
+types = [1 2 3];
 
 Cvec = 10.^linspace(-2,6,9);
 
@@ -128,9 +133,9 @@ for run = 1:totalRuns
 			% STABILITY
 			stab = zeros(numTest,2);
 			for i = 1:numTest
-% 				[stab(i,1),stab(i,2)] = measureStability(w, X', k, F_te{i}, S, type, kappa);
-% 				[stab(i,1),stab(i,2)] = measureStabilityRand1(w, X', k, F_te{i}, S, type, kappa)
-				[stab(i,1),stab(i,2)] = measureStabilityRand2(w, X', k, F_te{i}, S, nStabSamp, type, kappa);
+				[stab(i,1),stab(i,2),stabSamp] = measureStabilityRand2(...
+					w, X', k, F_te{i}, S, nStabSamp, type, kappa);
+				savedStabSamp(c, type, run, i, 1:nStabSamp) = stabSamp;
 			end
 			maxStab = max(stab,[],1);
 			savedStab(c, type, run, 1:2) = maxStab;
@@ -161,8 +166,8 @@ for run = 1:totalRuns
 	ylabel('Training error', 'FontSize', 14);
 	xlabel('C', 'FontSize', 14);
 	set(gca, 'FontSize', 14);
-	legend('Local error', 'CRF', 'M3N');
-% 	legend('Local error', 'CRF', 'M3N', 'CSM3N');
+% 	legend('Local error', 'CRF', 'M3N');
+	legend('Local error', 'CRF', 'M3N', 'CSM3N');
 
 	subplot(412);
 	semilogx(Cvec, mean(baseErrorTe(:)) * ones(size(Cvec)), '--ko');
@@ -260,55 +265,58 @@ for run = 1:totalRuns
 		stabs_mu(2,i) = max(savedStab(i, 2, :, 1));
 		stabs_y(2,i) = max(savedStab(i, 2, :, 2));
 	end
-% 	for i = 1:length(Cvec)
-% 		stabs_mu(3,i) = max(savedStab(i, 3, :, 1));
-% 		stabs_y(3,i) = max(savedStab(i, 3, :, 2));
-% 	end
+	for i = 1:length(Cvec)
+		stabs_mu(3,i) = max(savedStab(i, 3, :, 1));
+		stabs_y(3,i) = max(savedStab(i, 3, :, 2));
+	end
 	
 	% plot stability of marginals
-	subplot(411);
+	subplot(311);
 	semilogx(Cvec, stabs_mu(types,:)/2, 'x-');
 	xlabel('C', 'FontSize', 14);
 	ylabel('1-norm / 2', 'FontSize', 14);
 	title('Stability of marginals', 'FontSize', 14);
-	legend('CRF', 'M3N');	
-% 	legend('CRF', 'M3N', 'CSM3N');	
+% 	legend('CRF', 'M3N');	
+	legend('CRF', 'M3N', 'CSM3N');	
 
 	% plot stability of decoding
-	subplot(412);
+	subplot(312);
 	semilogx(Cvec, stabs_y(types,:), 'x-');
 	xlabel('C', 'FontSize', 14);
 	ylabel('Hamming norm', 'FontSize', 14);
 	title('Stability of decoding', 'FontSize', 14);
 	
-	% scatter plot marginal stability
-	stabs_scat = zeros(length(types),length(Cvec)*totalRuns);
-	genErr_scat = zeros(length(types),length(Cvec)*totalRuns);
-% 	stabs_scat = zeros(length(types),length(Cvec));
-% 	genErr_scat = zeros(length(types),length(Cvec));
-	for t=1:length(types)
-		stabs_all = squeeze(savedStab(:, t, :, 1))/2;
-% 		stabs_all = squeeze(savedStab(:, t, run, 1))/2;
-		stabs_scat(t,:) = stabs_all(:);
-		genErr_all = squeeze(genError(t, :, :));
-% 		genErr_all = squeeze(genError(t, :, run));
-		genErr_scat(t,:) = genErr_all(:);
-	end
-% 	subplot(313)
-% 	plot(stabs_scat', genErr_scat', 'x');
-% 	xlabel('Marginal stability', 'FontSize', 14);
-% 	ylabel('Generalization error', 'FontSize', 14);
-% 	title('Stability vs. Generalization', 'FontSize', 14);
-	subplot(413)
-	plot(stabs_scat(1,:)', genErr_scat(1,:)', 'bo');
-	xlabel('1-norm / 2', 'FontSize', 14);
-	ylabel('gen error', 'FontSize', 14);
-	title('Stability vs. Generalization CRF', 'FontSize', 14);
-	subplot(414)
-	plot(stabs_scat(2,:)', genErr_scat(2,:)', 'go');
-	xlabel('1-norm / 2', 'FontSize', 14);
-	ylabel('gen error', 'FontSize', 14);
-	title('Stability vs. Generalization M3N', 'FontSize', 14);
+	% plot marginal stability histogram
+	% don't know how to do this yet...
+	
+% 	% scatter plot marginal stability
+% 	stabs_scat = zeros(length(types),length(Cvec)*totalRuns);
+% 	genErr_scat = zeros(length(types),length(Cvec)*totalRuns);
+% % 	stabs_scat = zeros(length(types),length(Cvec));
+% % 	genErr_scat = zeros(length(types),length(Cvec));
+% 	for t=1:length(types)
+% 		stabs_all = squeeze(savedStab(:, t, :, 1))/2;
+% % 		stabs_all = squeeze(savedStab(:, t, run, 1))/2;
+% 		stabs_scat(t,:) = stabs_all(:);
+% 		genErr_all = squeeze(genError(t, :, :));
+% % 		genErr_all = squeeze(genError(t, :, run));
+% 		genErr_scat(t,:) = genErr_all(:);
+% 	end
+% % 	subplot(313)
+% % 	plot(stabs_scat', genErr_scat', 'x');
+% % 	xlabel('Marginal stability', 'FontSize', 14);
+% % 	ylabel('Generalization error', 'FontSize', 14);
+% % 	title('Stability vs. Generalization', 'FontSize', 14);
+% 	subplot(413)
+% 	plot(stabs_scat(1,:)', genErr_scat(1,:)', 'bo');
+% 	xlabel('1-norm / 2', 'FontSize', 14);
+% 	ylabel('gen error', 'FontSize', 14);
+% 	title('Stability vs. Generalization CRF', 'FontSize', 14);
+% 	subplot(414)
+% 	plot(stabs_scat(2,:)', genErr_scat(2,:)', 'go');
+% 	xlabel('1-norm / 2', 'FontSize', 14);
+% 	ylabel('gen error', 'FontSize', 14);
+% 	title('Stability vs. Generalization M3N', 'FontSize', 14);
 	
 		
 end

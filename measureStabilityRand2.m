@@ -1,4 +1,5 @@
-function [stab_mu, stab_y] = measureStabilityRand2(w, X, k, F, S, nSamp, type, kappa)
+function [stab_mu, stab_y, stab_samp_mu, stab_samp_y] = ...
+	measureStabilityRand2(w, X, k, F, S, nSamp, type, kappa)
 
 % w : weight vector.
 % X : d x n matrix, representing n nodes taking d values.
@@ -18,6 +19,8 @@ function [stab_mu, stab_y] = measureStabilityRand2(w, X, k, F, S, nSamp, type, k
 % initialize stability to 0
 stab_mu = 0;
 stab_y = 0;
+stab_samp_mu = zeros(nSamp,1);
+stab_samp_y = zeros(nSamp,1);
 			
 % run initial inference
 if type == 1
@@ -63,6 +66,7 @@ for s=1:nSamp
 	if stab_mu < delta
 		stab_mu = delta;
 	end
+	stab_samp_mu(s) = delta;
 	
 	% measure Hamming distance of decoding and store max
 	pred_1 = predictMax(y_1(1:k*n), n, k);
@@ -70,6 +74,7 @@ for s=1:nSamp
 	if stab_y < delta
 		stab_y = delta;
 	end
+	stab_samp_y(s) = delta;
 	
 	% replace perturbed value
 	X(j,i) = 0;

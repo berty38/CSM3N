@@ -4,7 +4,8 @@ function [w, kappa, y, x] = jointLearnEntLog(featureMap, labels, scope, S, C, x0
 % kappa, and worst-violator y for a given featureMap, label set, MRF
 % structure (S), and slack parameter (C)
 
-func = @(y, varargin) jointObjectiveEntLog(y, featureMap, labels, scope, S, C, featureMap*labels, varargin);
+func = @(y, varargin) jointObjectiveEntLog(...
+	y, featureMap, labels, scope, S, C, featureMap*labels, varargin);
 
 ell = zeros(size(labels));
 ell(scope) = 1 - 2*labels(scope);
